@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from bambino.appenv import RepoWrapper
+from appenv import RepoWrapper
 import os
 import subprocess
 from path import path
