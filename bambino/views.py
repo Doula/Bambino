@@ -6,8 +6,7 @@ import json
 def my_view(request):
     web_apps_dir = request.registry.settings['web_apps_dir']
     appenv = AppEnv(web_apps_dir)
-    payload = dict(status='ok', payload=appenv.repo_data)
     
-    print json.dumps(payload)
+    print json.dumps(appenv.repo_data)
     
-    return json.dumps(payload)
+    return json.dumps(appenv.repo_data)
