@@ -1,11 +1,12 @@
 from contextlib import contextmanager
-from bambino.appenv import RepoWrapper
+from appenv import Repository
 import os
 import subprocess
 from path import path
 import tempfile
 import unittest
 from pprint import pprint as pp
+from bambino import appenv
 
 class TestAppEnvIdentification(unittest.TestCase):
 
@@ -20,13 +21,12 @@ class TestAppEnvIdentification(unittest.TestCase):
         ne1.mkdir()
 
     def makeone(self):
-        from bambino import appenv
-        return appenv.AppEnvFolder(self.sandbox)
+        return appenv.WebAppDir(self.sandbox)
 
     def test_envid(self):
         aef = self.makeone()
-        assert aef.envs
-        envs = set(x.name for x in aef.envs)
+        assert aef.applications
+        envs = set(x.name for x in aef.applications)
         assert envs == set(('ae1', 'ae2')), envs
 
 class TestAppEnvRepo(unittest.TestCase):
@@ -49,8 +49,8 @@ class TestAppEnvRepo(unittest.TestCase):
             for arg in args:
                 subprocess.check_output(arg + devnul, shell=True)
 
-            from bambino.appenv import AppEnvRepo
-            return AppEnvRepo(sb)
+            from bambino.appenv import Application
+            return Application(sb)
 
     def test_no_tag(self):
         repo = self.make_env_app()
@@ -84,7 +84,6 @@ class TestAppEnvRepo(unittest.TestCase):
                 'git tag first_tag',
                 'git commit -a -m "im just saying"']
         repo = self.make_env_app(args)
-        import pdb; pdb.set_trace()
         assert repo.status == 'change_to_app'
 
 @contextmanager
