@@ -6,19 +6,19 @@ import json
 import sys
 import traceback
 
-class AppEnv(object):
+class Node(object):
 
     def __init__(self, root):
         self.root = root
 
     @property
     def repo_data(self):
-        folders = AppEnvFolder(self.root)
+        web_app_dir = WebAppDir(self.root)
         repos = []
         errors = []
-        for folder in folders.envs:
+        for folder in web_app_dir.applications:
             try:
-                repo = AppEnvRepo(folder)
+                repo = Application(folder)
                 repos.append(repo.to_dict)
             except Exception, e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -30,19 +30,19 @@ class AppEnv(object):
     def to_json(self):
         json.dumps(self.repo_data)
 
-class AppEnvFolder(path):
+class WebAppDir(path):
 
     def __init__(self, filepath):
-        super(AppEnvFolder, self).__init__(filepath)
+        super(WebAppDir, self).__init__(filepath)
 
     def is_env(self, folder):
         return (folder / '.git').exists() and (folder / 'etc').exists()
 
     @property
-    def envs(self):
+    def applications(self):
         return (env for env in self.dirs() if self.is_env(env))
 
-class RepoWrapper(object):
+class Repository(object):
 
     def __init__(self, path):
         self.repo = Repo(path)
@@ -82,13 +82,13 @@ class RepoWrapper(object):
         branch, howmany, sha = repo.execute(cmd).split('-')
         return branch, howmany, sha
 
-class AppEnvRepo(Repo):
+class Application(Repo):
 
     def __init__(self, filepath):
-        super(AppEnvRepo, self).__init__(filepath)
+        super(Application, self).__init__(filepath)
         self.path = path(filepath)
-        self.repo_app = RepoWrapper(self.path)
-        self.repo_config = RepoWrapper(self.path / 'etc')
+        self.repo_app = Repository(self.path)
+        self.repo_config = Repository(self.path / 'etc')
 
     @property
     def status(self):
