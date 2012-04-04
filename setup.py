@@ -11,7 +11,8 @@ requires = [
     'pyramid_debugtoolbar',
     'waitress',
     'path.py',
-    'gitpython'
+    'gitpython',
+    'requests'
     ]
 
 setup(name='Bambino',
