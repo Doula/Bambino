@@ -68,7 +68,6 @@ class Repository(object):
 
     @property
     def current_branch(self):
-        import pdb; pdb.set_trace();
         return self.repo.head.reference.name
 
     @property
