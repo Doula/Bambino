@@ -1,10 +1,13 @@
 from git import Git
+from contextlib import contextmanager
 from git import GitCommandError
 from git import Repo
 from path import path
 import json
 import sys
 import traceback
+import subprocess
+import os
 
 class Node(object):
 
@@ -42,6 +45,17 @@ class WebAppDir(path):
     def applications(self):
         return (env for env in self.dirs() if self.is_env(env))
 
+class Pip(object):
+
+    def __init__(self, root):
+        self.root = root
+
+    def freeze(self):
+        with pushd(self.root):
+            output,_ = subprocess.Popen(['pip', 'freeze', '-E', self.root], shell=False, stdout=subprocess.PIPE).communicate().split('\n')
+            lists = [split('==') for x in a.split('\n')]
+
+
 class Repository(object):
 
     def __init__(self, path):
@@ -54,6 +68,7 @@ class Repository(object):
 
     @property
     def current_branch(self):
+        import pdb; pdb.set_trace();
         return self.repo.head.reference.name
 
     @property
@@ -79,7 +94,10 @@ class Repository(object):
     def describe(self):
         repo = Git(self.path)
         cmd = ['git', 'describe', '--tags']
-        branch, howmany, sha = repo.execute(cmd).split('-')
+        #branch, howmany, sha = repo.execute(cmd).split('-')
+        result = repo.execute(cmd).split('-')
+        howmany, sha = result[-2:]
+        branch = '-'.join(result[0:len(result) - 2])
         return branch, howmany, sha
 
 class Application(Repo):
@@ -123,3 +141,14 @@ class Application(Repo):
     @property
     def name(self):
         return self.path.basename()
+
+@contextmanager
+def pushd(dir):
+    old_dir = os.getcwd()
+    os.chdir(dir)
+    try:
+        yield old_dir
+    finally:
+        os.chdir(old_dir)
+
+
