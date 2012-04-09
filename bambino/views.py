@@ -22,22 +22,23 @@ def tag(request):
     appenv = Node(web_apps_dir)
 
 
-# @subscriber(ApplicationCreated)
-# def register_me(event):
-#     """
-#     Register this Bambino node with Doula.
-#     """
-#     settings = event.app.registry.settings
-#     
-#     node = {
-#         'name': settings['node'],
-#         'site': settings['site'],
-#         'url' : settings['bambino_url']
-#     }
-#     
-#     payload = {'node': json.dumps(node)}
-#     
-#     try:
-#         requests.post(settings['register_url'], data=payload)
-#     except requests.exceptions.ConnectionError as e:
-#         log.error(e.message)
+@subscriber(ApplicationCreated)
+def register_me(event):
+    """
+    Register this Bambino node with Doula.
+    """
+    settings = event.app.registry.settings
+    print settings
+    
+    node = {
+        'name': settings['node'],
+        'site': settings['site'],
+        'url' : settings['bambino_url']
+    }
+    
+    payload = {'node': json.dumps(node)}
+    
+    try:
+        requests.post(settings['register_url'], data=payload)
+    except requests.exceptions.ConnectionError as e:
+        log.error(e.message)

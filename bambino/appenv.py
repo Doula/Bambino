@@ -2,7 +2,8 @@ from git import Git
 from contextlib import contextmanager
 from git import GitCommandError
 from git import Repo
-from path import path
+from path import path as pathd
+import pkg_resources
 import json
 import sys
 import traceback
@@ -49,7 +50,7 @@ class Node(object):
     def to_json(self):
         json.dumps(self.repo_data)
 
-class WebAppDir(path):
+class WebAppDir(pathd):
 
     def __init__(self, filepath):
         super(WebAppDir, self).__init__(filepath)
@@ -128,7 +129,7 @@ class Application(Repo):
 
     def __init__(self, filepath):
         super(Application, self).__init__(filepath)
-        self.path = path(filepath)
+        self.path = pathd(filepath)
         self.repo_app = Repository(self.path)
         etc = (self.path / 'etc').abspath()
         self.repo_config = Repository(etc)
@@ -153,6 +154,7 @@ class Application(Repo):
         out = dict(self.repo_app.to_dict('app').items() + self.repo_config.to_dict('config').items())
         out['status'] = self.status
         out['name'] = self.name
+        out['packages'] = self.packages
         return out
 
     @property
@@ -166,6 +168,32 @@ class Application(Repo):
     @property
     def name(self):
         return self.path.basename()
+        
+    @property
+    def packages(self):
+        """
+        Returns a list of pkg_resources.Distribution objects.
+        We'll use these to query the name and versions for that environment.
+        """
+        site_pckg_path = self._get_site_pckg_path(self.path)
+        dists = pkg_resources.find_distributions(site_pckg_path)
+        pckgs = { }
+        
+        for d in dists:
+            pckgs[d.key] = d.version
+        
+        return pckgs
+    
+    def _get_site_pckg_path(self, filepath):
+        lib_dir = pathd(filepath + '/lib')
+        # Use python* because we don't know which version of python
+        # we're looking for
+        python_dir = lib_dir.dirs('python*')[0]
+        site_pckg_path =  python_dir + '/site-packages'
+        
+        return site_pckg_path
+    
+
 
     def tag(self, tag, description):
         self.app.tag(tag, description)
@@ -179,5 +207,4 @@ def pushd(dir):
         yield old_dir
     finally:
         os.chdir(old_dir)
-
 
