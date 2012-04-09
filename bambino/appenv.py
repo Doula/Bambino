@@ -29,6 +29,22 @@ class Node(object):
                     (str(e), str(traceback.extract_tb(exc_traceback)))})
         return {'applications' :repos, 'errors' : errors}
 
+    def tag_apps(self, apps_to_tag, tag, message):
+        web_app_dir = WebAppDir(self.root)
+        tagged_apps = []
+        errors = []
+        for folder in web_app_dir.applications:
+            if(folder.split('/')[-1] in apps_to_tag):
+                try:
+                    app = Application(folder)
+                    app.tag(tag, message)
+                    tagged_apps.append(app.name)
+                except Exception, e:
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" % 
+                        (str(e), str(traceback.extract_tb(exc_traceback)))})
+        return {'tagged_apps' :tagged_apps, 'errors' :errors}
+
     @property
     def to_json(self):
         json.dumps(self.repo_data)
@@ -68,11 +84,14 @@ class Repository(object):
 
     @property
     def current_branch(self):
+        import pdb; pdb.set_trace();
         return self.repo.head.reference.name
 
     @property
     def is_dirty(self):
         return self.repo.is_dirty()
+
+    @property
 
     @property
     def change_count(self):
@@ -99,13 +118,20 @@ class Repository(object):
         branch = '-'.join(result[0:len(result) - 2])
         return branch, howmany, sha
 
+    def tag(self, tag, description):
+        repo = Repo(self.path)
+        repo.create_tag(tag, message=description)
+        remote = repo.remote()
+        remote.push('refs/tags/%s:refs/tags/%s' % (tag, tag))
+
 class Application(Repo):
 
     def __init__(self, filepath):
         super(Application, self).__init__(filepath)
         self.path = path(filepath)
         self.repo_app = Repository(self.path)
-        self.repo_config = Repository(self.path / 'etc')
+        etc = (self.path / 'etc').abspath()
+        self.repo_config = Repository(etc)
 
     @property
     def status(self):
@@ -135,11 +161,15 @@ class Application(Repo):
 
     @property
     def etc(self):
-        return self.repo_etc
+        return self.repo_config
 
     @property
     def name(self):
         return self.path.basename()
+
+    def tag(self, tag, description):
+        self.app.tag(tag, description)
+        self.etc.tag(tag, description)
 
 @contextmanager
 def pushd(dir):
