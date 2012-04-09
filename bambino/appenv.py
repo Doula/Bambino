@@ -38,6 +38,7 @@ class Node(object):
             if(folder.split('/')[-1] in apps_to_tag):
                 try:
                     app = Application(folder)
+                    print 'tag:%s, message:%s' % (tag, message)
                     app.tag(tag, message)
                     tagged_apps.append(app.name)
                 except Exception, e:
@@ -85,14 +86,11 @@ class Repository(object):
 
     @property
     def current_branch(self):
-        import pdb; pdb.set_trace();
         return self.repo.head.reference.name
 
     @property
     def is_dirty(self):
         return self.repo.is_dirty()
-
-    @property
 
     @property
     def change_count(self):
@@ -113,11 +111,13 @@ class Repository(object):
     def describe(self):
         repo = Git(self.path)
         cmd = ['git', 'describe', '--tags']
-        #branch, howmany, sha = repo.execute(cmd).split('-')
         result = repo.execute(cmd).split('-')
-        howmany, sha = result[-2:]
-        branch = '-'.join(result[0:len(result) - 2])
-        return branch, howmany, sha
+        if (len(result) == 1):
+            return '', 0, ''
+        else:
+            howmany, sha = result[-2:]
+            branch = '-'.join(result[0:len(result) - 2])
+            return branch, howmany, sha
 
     def tag(self, tag, description):
         repo = Repo(self.path)

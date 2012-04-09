@@ -19,8 +19,11 @@ def applications(request):
 @view_config(route_name='tag', renderer='json')
 def tag(request):
     web_apps_dir = request.registry.settings['web_apps_dir']
-    appenv = Node(web_apps_dir)
-
+    node = Node(web_apps_dir)
+    apps = [s.strip() for s in request.POST['apps'].split(',')]
+    return node.tag_apps(apps,
+                  request.POST['tag'],
+                  request.POST['description'])
 
 @subscriber(ApplicationCreated)
 def register_me(event):
