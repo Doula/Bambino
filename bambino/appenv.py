@@ -154,6 +154,7 @@ class Application(Repo):
         out = dict(self.repo_app.to_dict('app').items() + self.repo_config.to_dict('config').items())
         out['status'] = self.status
         out['name'] = self.name
+        out['remote'] = self.remote
         out['packages'] = self.packages
         return out
 
@@ -168,6 +169,10 @@ class Application(Repo):
     @property
     def name(self):
         return self.path.basename()
+    
+    @property
+    def remote(self):
+        return self.remotes.origin.url
         
     @property
     def packages(self):
