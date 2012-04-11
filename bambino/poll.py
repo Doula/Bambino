@@ -6,7 +6,7 @@ sched = Scheduler()
 def start_heartbeat():
     sched.start()
 
-@sched.interval_schedule(seconds=2)
+@sched.interval_schedule(seconds=60)
 def job_function():
     print "update doula, ",time.time()
 
