@@ -21,9 +21,6 @@ def start_heartbeat(n, url):
 def job_function():
     try:
         print "Registering node",time.time()
-        print json.dumps(node)
-        print reg_url
-        
         payload = {'node': json.dumps(node)}
         requests.post(reg_url, data=payload)
     except requests.exceptions.ConnectionError as e:
