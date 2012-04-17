@@ -26,7 +26,7 @@ class Node(object):
                 repos.append(repo.to_dict)
             except Exception, e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" % 
+                errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
                     (str(e), str(traceback.extract_tb(exc_traceback)))})
         return {'applications' :repos, 'errors' : errors}
 
@@ -43,7 +43,7 @@ class Node(object):
                     tagged_apps.append(app.name)
                 except Exception, e:
                     exc_type, exc_value, exc_traceback = sys.exc_info()
-                    errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" % 
+                    errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
                         (str(e), str(traceback.extract_tb(exc_traceback)))})
         return {'tagged_apps' :tagged_apps, 'errors' :errors}
 
@@ -169,11 +169,11 @@ class Application(Repo):
     @property
     def name(self):
         return self.path.basename()
-    
+
     @property
     def remote(self):
         return self.remotes.origin.url
-        
+
     @property
     def packages(self):
         """
@@ -183,21 +183,21 @@ class Application(Repo):
         site_pckg_path = self._get_site_pckg_path(self.path)
         dists = pkg_resources.find_distributions(site_pckg_path)
         pckgs = { }
-        
+
         for d in dists:
             pckgs[d.key] = d.version
-        
+
         return pckgs
-    
+
     def _get_site_pckg_path(self, filepath):
         lib_dir = pathd(filepath + '/lib')
         # Use python* because we don't know which version of python
         # we're looking for
         python_dir = lib_dir.dirs('python*')[0]
         site_pckg_path =  python_dir + '/site-packages'
-        
+
         return site_pckg_path
-    
+
 
 
     def tag(self, tag, description):

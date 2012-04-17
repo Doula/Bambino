@@ -4,9 +4,7 @@ from pyramid.events import subscriber
 from appenv import Node
 
 import poll
-import json
 import logging
-import requests
 import time
 
 log = logging.getLogger(__name__)
@@ -32,8 +30,6 @@ def register_me(event):
     """
     Register this Bambino node with Doula.
     """
-    poll.start_heartbeat()
-    
     settings = event.app.registry.settings
     
     node = {
@@ -42,9 +38,4 @@ def register_me(event):
         'url' : settings['bambino_url']
     }
     
-    payload = {'node': json.dumps(node)}
-    
-    try:
-        requests.post(settings['register_url'], data=payload)
-    except requests.exceptions.ConnectionError as e:
-        log.error(e.message)
+    poll.start_heartbeat(node, settings['register_url'])
