@@ -63,17 +63,6 @@ class WebAppDir(pathd):
     def applications(self):
         return (env for env in self.dirs() if self.is_env(env))
 
-class Pip(object):
-
-    def __init__(self, root):
-        self.root = root
-
-    def freeze(self):
-        with pushd(self.root):
-            output,_ = subprocess.Popen(['pip', 'freeze', '-E', self.root], shell=False, stdout=subprocess.PIPE).communicate().split('\n')
-            lists = [split('==') for x in a.split('\n')]
-
-
 class Repository(object):
 
     def __init__(self, path):
@@ -91,6 +80,19 @@ class Repository(object):
     @property
     def is_dirty(self):
         return self.repo.is_dirty()
+    
+    @property
+    def changed_files(self):
+        changed_files = [ ]
+        # Diff object between index and working tree
+        diff = self.repo.index.diff(None)
+        
+        for d in diff:
+            d_as_s = str(d)
+            filename = d_as_s.split('============')[0].strip()
+            changed_files.append(filename)
+        
+        return changed_files
 
     @property
     def change_count(self):
@@ -123,6 +125,8 @@ class Repository(object):
         repo = Repo(self.path)
         repo.create_tag(tag, message=description)
         remote = repo.remote()
+        # alextodo what happens when this fails? can we have a reconciliation
+        # where any tags that haven't been pushed go up?
         remote.push('refs/tags/%s:refs/tags/%s' % (tag, tag))
 
 class Application(Repo):
@@ -156,6 +160,7 @@ class Application(Repo):
         out['name'] = self.name
         out['remote'] = self.remote
         out['packages'] = self.packages
+        out['changed_files'] = self.changed_files
         return out
 
     @property
@@ -173,7 +178,19 @@ class Application(Repo):
     @property
     def remote(self):
         return self.remotes.origin.url
+    
+    @property
+    def changed_files(self):
+        changed_files = self.repo_app.changed_files
+        changed_files.extend(self.repo_config.changed_files)
+        
+        return self._unique_files(changed_files)
 
+    def _unique_files(self, changed_files):
+        seen = set()
+        seen_add = seen.add
+        return [ x for x in changed_files if x not in seen and not seen_add(x)]
+    
     @property
     def packages(self):
         """
