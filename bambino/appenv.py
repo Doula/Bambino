@@ -183,7 +183,7 @@ class Application(Repo):
     def changed_files(self):
         changed_files = self.repo_app.changed_files
         changed_files.extend(self.repo_config.changed_files)
-        
+
         return self._unique_files(changed_files)
 
     def _unique_files(self, changed_files):
@@ -214,8 +214,6 @@ class Application(Repo):
         site_pckg_path =  python_dir + '/site-packages'
 
         return site_pckg_path
-
-
 
     def tag(self, tag, description):
         self.app.tag(tag, description)
