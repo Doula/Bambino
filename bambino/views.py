@@ -3,7 +3,7 @@ from pyramid.events import ApplicationCreated
 from pyramid.events import subscriber
 from appenv import Node
 
-import poll
+import registration
 import logging
 import time
 
@@ -38,4 +38,6 @@ def register_me(event):
         'url' : settings['bambino_url']
     }
     
-    poll.start_heartbeat(node, settings['register_url'])
+    registration.register_bambino(node, settings['register_url'])
+
+
