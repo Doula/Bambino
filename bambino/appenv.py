@@ -12,18 +12,20 @@ import sys
 import traceback
 import subprocess
 import os
+import glob
 
 class Node(object):
 
     def __init__(self, root):
         self.root = root
+        self.web_app_dir = WebAppDir(self.root)
 
     @property
     def repo_data(self):
-        web_app_dir = WebAppDir(self.root)
         repos = []
         errors = []
-        for folder in web_app_dir.applications:
+
+        for folder in self.web_app_dir.applications:
             try:
                 repo = Application(folder)
                 repos.append(repo.to_dict)
@@ -34,13 +36,14 @@ class Node(object):
         return {'applications' :repos, 'errors' : errors}
 
     def tag_apps(self, apps_to_tag, tag, message):
-        web_app_dir = WebAppDir(self.root)
         tagged_apps = []
         errors = []
-        for folder in web_app_dir.applications:
+
+        for folder in self.web_app_dir.applications:
             if(folder.split('/')[-1] in apps_to_tag):
                 try:
                     app = Application(folder)
+                    # todo, use logging for this message
                     print 'tag:%s, message:%s' % (tag, message)
                     app.tag(tag, message)
                     tagged_apps.append(app.name)
@@ -49,6 +52,16 @@ class Node(object):
                     errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
                         (str(e), str(traceback.extract_tb(exc_traceback)))})
         return {'tagged_apps' :tagged_apps, 'errors' :errors}
+
+    def add_note(self, app, note):
+        """
+        Add a note to a specific application.
+        """
+        # alextodo, handle exceptions. for now okay to throw exception, 501 error
+        for folder in self.web_app_dir.applications:
+            if(folder.split('/')[-1] == app):
+                app = Application(folder)
+                app.add_note(note)
 
     @property
     def to_json(self):
@@ -167,6 +180,7 @@ class Application(Repo):
         out['status'] = self.status
         out['name'] = self.name
         out['remote'] = self.remote
+        out['notes'] = self.notes
         out['packages'] = self.packages
         out['changed_files'] = self.changed_files
         out['last_tag_message'] = self.repo_app.last_tag_message
@@ -227,6 +241,7 @@ class Application(Repo):
     def tag(self, tag, description):
         self.app.tag(tag, description)
         self.etc.tag(tag, description)
+
     def mark_tag_as_deployed(self, tag):
         """
         Adds tag to the end of the file ./data/deploy.txt
@@ -246,6 +261,21 @@ class Application(Repo):
         
         return False
     
+    @property
+    def notes(self):
+        """
+        Return a list of the notes that exist in the data directory.
+        """
+        notes = glob.glob(self.path + '/data/*_note.txt')
+        notes_and_text = { }
+
+        for note_path in notes:
+            f = open(note_path)
+            date = os.path.basename(note_path).replace('_note.txt', '')
+            notes_and_text[date] = f.read()
+            f.close()
+
+        return notes_and_text
 
     def add_note(self, msg):
         """

@@ -39,11 +39,9 @@ def mark_as_deployed(request):
 def add_note(request):
     web_apps_dir = request.registry.settings['web_apps_dir']
     node = Node(web_apps_dir)
-    # hook up request to be sent in.
-    apps = [s.strip() for s in request.POST['apps'].split(',')]
-    # send in a specific app too
-
-    return node.add_note(apps, request.POST['msg'])
+    node.add_note(request.POST['app'], request.POST['note'])
+    
+    return { 'success': True }
 
 @subscriber(ApplicationCreated)
 def register_me(event):
