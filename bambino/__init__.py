@@ -7,6 +7,8 @@ def main(global_config, **settings):
     config = Configurator(settings=settings)
     config.add_route('applications', '/applications')
     config.add_route('tag', '/tag')
+    config.add_route('add_note', '/note')
+    config.add_route('mark_as_deployed', 'deploy/mark')
     config.scan()
     
     return config.make_wsgi_app()

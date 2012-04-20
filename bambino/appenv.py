@@ -3,6 +3,9 @@ from contextlib import contextmanager
 from git import GitCommandError
 from git import Repo
 from path import path as pathd
+
+import time
+import datetime
 import pkg_resources
 import json
 import sys
@@ -74,6 +77,11 @@ class Repository(object):
         return self.repo.tags and self.repo.tags.pop().name or 'HEAD'
 
     @property
+    def last_tag_message(self):
+        last_tag = self.repo.tags.pop()
+        return last_tag.tag.message
+
+    @property
     def current_branch(self):
         return self.repo.head.reference.name
 
@@ -104,7 +112,7 @@ class Repository(object):
 
     def to_dict(self, postfix):
         out = {}
-        out['last_tag_%s' % postfix] = self.last_tag
+        out['last_tag_%s' % postfix] = self.last_tag 
         out['current_branch_%s' % postfix] = self.current_branch
         out['is_dirty_%s' % postfix] = self.is_dirty
         out['change_count_%s' % postfix] = self.change_count
@@ -161,6 +169,7 @@ class Application(Repo):
         out['remote'] = self.remote
         out['packages'] = self.packages
         out['changed_files'] = self.changed_files
+        out['last_tag_message'] = self.repo_app.last_tag_message
         return out
 
     @property
@@ -218,6 +227,53 @@ class Application(Repo):
     def tag(self, tag, description):
         self.app.tag(tag, description)
         self.etc.tag(tag, description)
+    def mark_tag_as_deployed(self, tag):
+        """
+        Adds tag to the end of the file ./data/deploy.txt
+        thus marking it as deployed.
+        """
+        # alextodo, this data needs to be sent to the git repo
+        self._ensure_data_directory_exist()
+        f = open(self.path + '/data/deploy.txt', 'a')
+        f.write(tag + "\n")
+        f.close()
+    
+    def is_tag_deployed(self, tag):
+        f = open(self.path + '/data/deploy.txt', 'r')
+        for line in f.readlines():
+            if line.strip() == tag:
+                return True
+        
+        return False
+    
+
+    def add_note(self, msg):
+        """
+        Add a new note to data directory.
+        # alextodo, need to push up change. for now just make change
+        """
+        self._ensure_data_directory_exist()
+        note_name = self._get_note_name()
+        self._write_note(msg, note_name)
+        # alextodo push to git, move it up to code.corp.
+    
+    def _write_note(self, msg, note_name):
+        f = open(self.path + '/data/' + note_name, 'w')
+        f.write(msg)
+        f.close()
+
+    def _get_note_name(self):
+        """
+        Return the name of the next note. The format of the
+        name is YYYYMMDDHHMMSS_note.txt (UTC timestamp)
+        """
+        utc = datetime.datetime.utcfromtimestamp(time.time())
+        format = "%Y%m%d%H%M%S"
+        return utc.strftime(format) + '_note.txt'
+
+    def _ensure_data_directory_exist(self):
+        if not os.path.isdir(self.path + '/data'):
+            os.makedirs(self.path + '/data')
 
 @contextmanager
 def pushd(dir):
