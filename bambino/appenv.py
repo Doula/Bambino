@@ -62,6 +62,7 @@ class Node(object):
             if(folder.split('/')[-1] == app):
                 app = Application(folder)
                 app.add_note(note)
+                return app.notes
 
     @property
     def to_json(self):
@@ -92,7 +93,11 @@ class Repository(object):
     @property
     def last_tag_message(self):
         last_tag = self.repo.tags.pop()
-        return last_tag.tag.message
+
+        if last_tag.tag:
+            return last_tag.tag.message
+        else:
+            return ''
 
     @property
     def current_branch(self):
@@ -172,7 +177,10 @@ class Application(Repo):
             else:
                 return 'change_to_config'
 
-        return 'unchanged'
+        if self.is_tag_deployed(self.repo_app.last_tag):
+            return 'deployed'
+        else:
+            return 'tagged'
 
     @property
     def to_dict(self):
@@ -254,10 +262,13 @@ class Application(Repo):
         f.close()
     
     def is_tag_deployed(self, tag):
-        f = open(self.path + '/data/deploy.txt', 'r')
-        for line in f.readlines():
-            if line.strip() == tag:
-                return True
+        deploy_file_path = self.path + '/data/deploy.txt'
+
+        if os.path.isfile(deploy_file_path):
+            f = open(deploy_file_path, 'r')
+            for line in f.readlines():
+                if line.strip() == tag:
+                    return True
         
         return False
     
@@ -281,10 +292,12 @@ class Application(Repo):
         """
         Add a new note to data directory.
         # alextodo, need to push up change. for now just make change
+        # change needs to be committed to submodule
         """
         self._ensure_data_directory_exist()
         note_name = self._get_note_name()
         self._write_note(msg, note_name)
+
         # alextodo push to git, move it up to code.corp.
     
     def _write_note(self, msg, note_name):

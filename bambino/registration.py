@@ -33,6 +33,8 @@ def register_bambino(n, url):
     setattr(module, 'registration_url', url)
     
     sched.start()
+
+    # Observe the death of this application
     signal(SIGTERM, lambda signum, stack_frame: exit(1))
     signal(SIGINT, lambda signum, stack_frame: exit(1))
     atexit.register(register_shutdown)

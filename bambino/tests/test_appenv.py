@@ -88,7 +88,7 @@ class TestAppEnvRepo(unittest.TestCase):
 
     def test_unchanged(self):
         repo = self.make_env_app()
-        assert repo.status == 'unchanged'
+        assert repo.status == 'tagged'
 
     def test_uncommitted_changes(self):
         args = ['echo "hi" >> root.txt']

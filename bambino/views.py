@@ -29,19 +29,17 @@ def tag(request):
 def mark_as_deployed(request):
     web_apps_dir = request.registry.settings['web_apps_dir']
     node = Node(web_apps_dir)
-
     apps = [s.strip() for s in request.POST['apps'].split(',')]
-    # add note to specific app
-
+    
     return node.mark_as_deployed(apps, request.POST['tag'])
 
 @view_config(route_name='add_note', renderer='json')
 def add_note(request):
     web_apps_dir = request.registry.settings['web_apps_dir']
     node = Node(web_apps_dir)
-    node.add_note(request.POST['app'], request.POST['note'])
+    notes = node.add_note(request.POST['app'], request.POST['note'])
     
-    return { 'success': True }
+    return { 'success': True, 'notes': notes }
 
 @subscriber(ApplicationCreated)
 def register_me(event):
