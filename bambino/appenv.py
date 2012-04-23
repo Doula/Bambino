@@ -176,7 +176,8 @@ class Application(Repo):
                 return 'change_to_app'
             else:
                 return 'change_to_config'
-
+        
+        # alextodo, this will no longer come from this.
         if self.is_tag_deployed(self.repo_app.last_tag):
             return 'deployed'
         else:
