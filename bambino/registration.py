@@ -10,7 +10,6 @@ from apscheduler.scheduler import Scheduler
 
 module = sys.modules[__name__]
 log = logging.getLogger('bambino')
-sched = Scheduler()
 node = { }
 registration_url = ''
 
@@ -31,14 +30,16 @@ def register_bambino(n, url):
     """
     setattr(module, 'node', n)
     setattr(module, 'registration_url', url)
-    
+    sched = Scheduler()
     sched.start()
 
     # Observe the death of this application
     signal(SIGTERM, lambda signum, stack_frame: exit(1))
     signal(SIGINT, lambda signum, stack_frame: exit(1))
+    # SIGHUP, register that as well. loop over signals
     atexit.register(register_shutdown)
 
+# Make it configurable for timing
 @sched.interval_schedule(seconds=5)
 def job_function():
     """
