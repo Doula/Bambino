@@ -12,6 +12,7 @@ module = sys.modules[__name__]
 log = logging.getLogger('bambino')
 node = { }
 registration_url = ''
+sched = Scheduler()
 
 def register_shutdown():
     """
@@ -30,7 +31,7 @@ def register_bambino(n, url):
     """
     setattr(module, 'node', n)
     setattr(module, 'registration_url', url)
-    sched = Scheduler()
+    
     sched.start()
 
     # Observe the death of this application
