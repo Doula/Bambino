@@ -41,7 +41,7 @@ def register_bambino(n, url):
     atexit.register(register_shutdown)
 
 # Make it configurable for timing
-@sched.interval_schedule(seconds=5)
+@sched.interval_schedule(seconds=2)
 def job_function():
     """
     Register this nodes data, i.e.
