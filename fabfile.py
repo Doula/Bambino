@@ -11,6 +11,10 @@ doula_dir = '/opt/bambino'
 supervisor_file = '/etc/supervisor/conf.d/bambino.conf'
 
 def update():
+    if not exists(doula_dir):
+        print "We can go no further, you must run 'fab create_env' before moving on"
+        return
+
     with cd(doula_dir):
         if not exists('bin'):
             run('mkvirtualenv .')
@@ -29,8 +33,7 @@ def update():
         restart()
 
 def restart():
-    sudo('supervisorctl restart doula_6543')
-
+    sudo('supervisorctl restart bambino_6666')
 
 def create_env(host='mktest1-pyweb.corp.surveymonkey.com'):
     _make_base_dir()

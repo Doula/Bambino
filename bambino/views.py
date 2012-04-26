@@ -47,13 +47,12 @@ def register_me(event):
     Register this Bambino node with Doula.
     """
     settings = event.app.registry.settings
-    
-    node = {
-        'name': settings['node'],
-        'site': settings['site'],
-        'url' : settings['bambino_url']
-    }
-    
-    registration.register_bambino(node, settings['register_url'])
+
+    machine_info = Node.get_machine_info()
+    #TODO: we're using the IP for now.  Once the hostname gets standardized, we'll
+    # move to that
+    machine_info['url'] = 'http://%s:%s' % (machine_info['ip'], settings['port'])
+
+    registration.register_bambino(machine_info, settings['register_url'])
 
 
