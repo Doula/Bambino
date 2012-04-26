@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from git import GitCommandError
 from git import Repo
 from path import path as pathd
+from socket import gethostname
 
 import time
 import datetime
@@ -13,6 +14,8 @@ import traceback
 import subprocess
 import os
 import glob
+import socket
+import re
 
 class Node(object):
 
@@ -56,6 +59,35 @@ class Node(object):
     @property
     def to_json(self):
         json.dumps(self.repo_data)
+
+    @staticmethod
+    def _ip():
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("192.168.201.5",80))
+        out = (s.getsockname()[0])
+        s.close()
+        return out
+
+    @staticmethod
+    def _hostname():
+        from socket import gethostname
+        return gethostname()
+
+    @staticmethod
+    def _site(hostname):
+        sites = {'mktest3-py' : 'mt3', 'mktest2-py' : 'mt2', 'mktest2-py' : 'mt1'}
+        if(hostname in sites):
+            return sites[hostname]
+
+        arr = hostname.split('-')
+        if(len(arr) == 2):
+            return arr[0]
+
+        return hostname
+
+    @staticmethod
+    def get_machine_info():
+        return {'ip' : Node._ip(), 'name' : Node._hostname(), 'site' : Node._site(Node._hostname())}
 
 class WebAppDir(pathd):
 
