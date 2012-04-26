@@ -53,17 +53,6 @@ class Node(object):
                         (str(e), str(traceback.extract_tb(exc_traceback)))})
         return {'tagged_apps' :tagged_apps, 'errors' :errors}
 
-    def add_note(self, app, note):
-        """
-        Add a note to a specific application.
-        """
-        # alextodo, handle exceptions. for now okay to throw exception, 501 error
-        for folder in self.web_app_dir.applications:
-            if(folder.split('/')[-1] == app):
-                app = Application(folder)
-                app.add_note(note)
-                return app.notes
-
     @property
     def to_json(self):
         json.dumps(self.repo_data)
@@ -177,19 +166,14 @@ class Application(Repo):
             else:
                 return 'change_to_config'
         
-        # alextodo, this will no longer come from this.
-        if self.is_tag_deployed(self.repo_app.last_tag):
-            return 'deployed'
-        else:
-            return 'tagged'
-
+        return 'tagged'
+    
     @property
     def to_dict(self):
         out = dict(self.repo_app.to_dict('app').items() + self.repo_config.to_dict('config').items())
         out['status'] = self.status
         out['name'] = self.name
         out['remote'] = self.remote
-        out['notes'] = self.notes
         out['packages'] = self.packages
         out['changed_files'] = self.changed_files
         out['last_tag_message'] = self.repo_app.last_tag_message
@@ -209,7 +193,10 @@ class Application(Repo):
 
     @property
     def remote(self):
-        return self.remotes.origin.url
+        if hasattr(self.remotes, 'origin'):
+            return self.remotes.origin.url
+        else:
+            return ''
     
     @property
     def changed_files(self):
@@ -250,74 +237,7 @@ class Application(Repo):
     def tag(self, tag, description):
         self.app.tag(tag, description)
         self.etc.tag(tag, description)
-
-    def mark_tag_as_deployed(self, tag):
-        """
-        Adds tag to the end of the file ./data/deploy.txt
-        thus marking it as deployed.
-        """
-        # alextodo, this data needs to be sent to the git repo
-        self._ensure_data_directory_exist()
-        f = open(self.path + '/data/deploy.txt', 'a')
-        f.write(tag + "\n")
-        f.close()
     
-    def is_tag_deployed(self, tag):
-        deploy_file_path = self.path + '/data/deploy.txt'
-
-        if os.path.isfile(deploy_file_path):
-            f = open(deploy_file_path, 'r')
-            for line in f.readlines():
-                if line.strip() == tag:
-                    return True
-        
-        return False
-    
-    @property
-    def notes(self):
-        """
-        Return a list of the notes that exist in the data directory.
-        """
-        notes = glob.glob(self.path + '/data/*_note.txt')
-        notes_and_text = { }
-
-        for note_path in notes:
-            f = open(note_path)
-            date = os.path.basename(note_path).replace('_note.txt', '')
-            notes_and_text[date] = f.read()
-            f.close()
-
-        return notes_and_text
-
-    def add_note(self, msg):
-        """
-        Add a new note to data directory.
-        # alextodo, need to push up change. for now just make change
-        # change needs to be committed to submodule
-        """
-        self._ensure_data_directory_exist()
-        note_name = self._get_note_name()
-        self._write_note(msg, note_name)
-
-        # alextodo push to git, move it up to code.corp.
-    
-    def _write_note(self, msg, note_name):
-        f = open(self.path + '/data/' + note_name, 'w')
-        f.write(msg)
-        f.close()
-
-    def _get_note_name(self):
-        """
-        Return the name of the next note. The format of the
-        name is YYYYMMDDHHMMSS_note.txt (UTC timestamp)
-        """
-        utc = datetime.datetime.utcfromtimestamp(time.time())
-        format = "%Y%m%d%H%M%S"
-        return utc.strftime(format) + '_note.txt'
-
-    def _ensure_data_directory_exist(self):
-        if not os.path.isdir(self.path + '/data'):
-            os.makedirs(self.path + '/data')
 
 @contextmanager
 def pushd(dir):

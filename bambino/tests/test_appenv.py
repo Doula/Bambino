@@ -101,23 +101,7 @@ class TestAppEnvRepo(unittest.TestCase):
                 'git commit -a -m "im just saying"']
         repo = self.make_env_app(args)
         assert repo.status == 'change_to_app_and_config'
-
-    def test_add_note(self):
-        """
-        Test adding a note to an app environment.
-        """
-        msg = "Add this message to Bambino"
-        app = Application(TestAppEnvRepo.temp_dir)
-        app.add_note(msg)
-        
-        files = glob.glob(TestAppEnvRepo.temp_dir + '/data/*_note.txt')
-        
-        self.assertTrue(len(files) > 0)
-    def test_mark_tag_as_deployed(self):
-        app = Application(TestAppEnvRepo.temp_dir)
-        app.mark_tag_as_deployed('test_tag')
-
-        self.assertTrue(app.is_tag_deployed('test_tag'))
+    
 
 
 @contextmanager
