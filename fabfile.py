@@ -23,7 +23,7 @@ def update():
             run('virtualenv .')
         with prefix('. bin/activate'):
             run('echo $VIRTUAL_ENV')
-            run('pip install -e git+git://github.com/Doula/Bambino.git#egg=bambino')
+            run('pip install -e git+git://github.com/Doula/Bambino.git@master#egg=bambino')
         with cd('src/bambino'):
             run('git submodule init')
             run('git submodule update')
