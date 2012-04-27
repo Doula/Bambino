@@ -109,7 +109,12 @@ class Repository(object):
 
     @property
     def last_tag(self):
-        return self.repo.tags and self.repo.tags.pop().name or 'HEAD'
+        last_tag_name = None
+        
+        if len(self.repo.tags)
+            last_tag_name = self.repo.tags.pop().name
+        
+        return self.repo.tags and last_tag_name or 'HEAD'
     
     @property
     def tag_history(self):
@@ -131,12 +136,15 @@ class Repository(object):
     
     @property
     def last_tag_message(self):
-        last_tag = self.repo.tags.pop()
-
-        if last_tag.tag:
-            return last_tag.tag.message
-        else:
-            return ''
+        last_tag_message = ''
+        
+        if len(self.repo.tags) > 0:            
+            last_tag = self.repo.tags.pop()
+            
+            if last_tag.tag:
+                last_tag_message = last_tag.tag.message
+        
+        return last_tag_message
 
     @property
     def current_branch(self):
