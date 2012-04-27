@@ -111,7 +111,7 @@ class Repository(object):
     def last_tag(self):
         last_tag_name = None
         
-        if len(self.repo.tags)
+        if len(self.repo.tags):
             last_tag_name = self.repo.tags.pop().name
         
         return self.repo.tags and last_tag_name or 'HEAD'
