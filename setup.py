@@ -12,7 +12,8 @@ requires = [
     'waitress',
     'path.py',
     'gitpython',
-    'requests'
+    'requests',
+    'fabric'
     ]
 
 setup(name='Bambino',
