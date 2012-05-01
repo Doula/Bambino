@@ -109,16 +109,42 @@ class Repository(object):
 
     @property
     def last_tag(self):
-        return self.repo.tags and self.repo.tags.pop().name or 'HEAD'
-
+        last_tag_name = None
+        
+        if len(self.repo.tags):
+            last_tag_name = self.repo.tags.pop().name
+        
+        return self.repo.tags and last_tag_name or 'HEAD'
+    
+    @property
+    def tag_history(self):
+        tag_history = { }
+        
+        try:
+            for tag in self.repo.tags:
+                if tag.tag:
+                    tagged_date = tag.tag.tagged_date
+                else:
+                    tagged_date = tag.commit.committed_date
+                
+                tag_history[tag.name] = tagged_date
+        except:
+            # In case the tagged_date isn't available at all
+            pass
+        
+        return tag_history
+    
     @property
     def last_tag_message(self):
-        last_tag = self.repo.tags.pop()
-
-        if last_tag.tag:
-            return last_tag.tag.message
-        else:
-            return ''
+        last_tag_message = ''
+        
+        if len(self.repo.tags) > 0:            
+            last_tag = self.repo.tags.pop()
+            
+            if last_tag.tag:
+                last_tag_message = last_tag.tag.message
+        
+        return last_tag_message
 
     @property
     def current_branch(self):
@@ -151,10 +177,11 @@ class Repository(object):
 
     def to_dict(self, postfix):
         out = {}
-        out['last_tag_%s' % postfix] = self.last_tag 
+        out['last_tag_%s' % postfix] = self.last_tag
         out['current_branch_%s' % postfix] = self.current_branch
         out['is_dirty_%s' % postfix] = self.is_dirty
         out['change_count_%s' % postfix] = self.change_count
+        out['tag_history'] = self.tag_history
         return out
 
     def describe(self):
