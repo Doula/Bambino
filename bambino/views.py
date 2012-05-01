@@ -46,6 +46,6 @@ def register_me(event):
     # move to that
     machine_info['url'] = 'http://%s:%s' % (machine_info['ip'], settings['port'])
 
-    registration.register_bambino(machine_info, settings['register_url'])
+    registration.register_bambino(machine_info, settings['register_url'], settings['registration_interval'])
 
 

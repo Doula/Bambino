@@ -5,14 +5,12 @@ import logging
 import requests
 import sys
 from sys import exit
-from signal import signal, SIGTERM, SIGINT
+from signal import signal, SIGTERM, SIGINT, SIGHUP
 from apscheduler.scheduler import Scheduler
 
-module = sys.modules[__name__]
 log = logging.getLogger('bambino')
 node = { }
 registration_url = ''
-sched = Scheduler()
 
 def register_shutdown():
     """
@@ -24,25 +22,8 @@ def register_shutdown():
     except requests.exceptions.ConnectionError as e:
         log.error(e.message)
 
-def register_bambino(n, url):
-    """
-    Start the Bambino heart beat to let Doula know that
-    this node is alive.
-    """
-    setattr(module, 'node', n)
-    setattr(module, 'registration_url', url)
-    
-    sched.start()
 
-    # Observe the death of this application
-    signal(SIGTERM, lambda signum, stack_frame: exit(1))
-    signal(SIGINT, lambda signum, stack_frame: exit(1))
-    # SIGHUP, register that as well. loop over signals
-    atexit.register(register_shutdown)
-
-# Make it configurable for timing
-@sched.interval_schedule(seconds=2)
-def job_function():
+def register_this_bambino():
     """
     Register this nodes data, i.e.
     {
@@ -56,3 +37,23 @@ def job_function():
         requests.post(registration_url, data=payload)
     except requests.exceptions.ConnectionError as e:
         log.error(e.message)
+                
+def register_bambino(n, url, interval):
+    """
+    Start the Bambino heart beat to let Doula know that
+    this node is alive.
+    """
+    global node
+    node = n
+    global registration_url
+    registration_url = url
+    
+    sched = Scheduler()
+    sched.start()
+    sched.add_interval_job(register_this_bambino, seconds=int(interval))
+
+    # Observe the death of this application
+    signal(SIGTERM, lambda signum, stack_frame: exit(1))
+    signal(SIGINT, lambda signum, stack_frame: exit(1))
+    signal(SIGHUP, lambda signum, stack_frame: exit(1))
+    atexit.register(register_shutdown)
