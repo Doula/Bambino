@@ -117,22 +117,27 @@ class Repository(object):
         return self.repo.tags and last_tag_name or 'HEAD'
     
     @property
-    def tag_history(self):
-        tag_history = { }
+    def tags(self):
+        tags = [ ]
         
         try:
             for tag in self.repo.tags:
-                if tag.tag:
-                    tagged_date = tag.tag.tagged_date
-                else:
-                    tagged_date = tag.commit.committed_date
+                tag_details = { }
                 
-                tag_history[tag.name] = tagged_date
+                if tag.tag:
+                    tag_details['message'] = tag.tag.message
+                    tag_details['date'] = tag.tag.tagged_date
+                else:
+                    tag_details['message'] = ''
+                    tag_details['date'] = tag.commit.committed_date
+                
+                tag_details['name'] = tag.name
+                tags.append(tag_details)
         except:
             # In case the tagged_date isn't available at all
             pass
         
-        return tag_history
+        return tags
     
     @property
     def last_tag_message(self):
@@ -181,7 +186,7 @@ class Repository(object):
         out['current_branch_%s' % postfix] = self.current_branch
         out['is_dirty_%s' % postfix] = self.is_dirty
         out['change_count_%s' % postfix] = self.change_count
-        out['tag_history'] = self.tag_history
+        out['tags'] = self.tags
         return out
 
     def describe(self):
