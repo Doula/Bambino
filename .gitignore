@@ -1,3 +1,4 @@
 *.pyc
 webapp
 temp/
+*.egg-info/

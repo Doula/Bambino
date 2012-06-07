@@ -12,6 +12,7 @@ import json
 import sys
 import traceback
 import subprocess
+import json
 import os
 import glob
 import socket
@@ -285,7 +286,17 @@ class Application(Repo):
         pckgs = { }
 
         for d in dists:
-            pckgs[d.key] = d.version
+            pckg = {}
+            
+            if d.has_metadata('git_info.txt'):
+                git_info_json = d.get_metadata('git_info.txt')
+                git_info = json.loads(git_info_json)
+
+                pckg['branch'] = git_info['git_branch']
+                pckg['remotes'] = git_info['git_remotes']
+            
+            pckg['version'] = d.version
+            pckgs[d.key] = pckg
 
         return pckgs
 
