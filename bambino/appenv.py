@@ -29,7 +29,7 @@ class Node(object):
         repos = []
         errors = []
 
-        for folder in self.web_app_dir.applications:
+        for folder in self.web_app_dir.services:
             try:
                 repo = Application(folder)
                 repos.append(repo.to_dict)
@@ -37,13 +37,13 @@ class Node(object):
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
                     (str(e), str(traceback.extract_tb(exc_traceback)))})
-        return {'applications' :repos, 'errors' : errors}
+        return {'services' :repos, 'errors' : errors}
 
     def tag_apps(self, apps_to_tag, tag, message):
         tagged_apps = []
         errors = []
 
-        for folder in self.web_app_dir.applications:
+        for folder in self.web_app_dir.services:
             if(folder.split('/')[-1] in apps_to_tag):
                 try:
                     app = Application(folder)
@@ -99,7 +99,7 @@ class WebAppDir(pathd):
         return (folder / '.git').exists() and (folder / 'etc').exists()
 
     @property
-    def applications(self):
+    def services(self):
         return (env for env in self.dirs() if self.is_env(env))
 
 class Repository(object):
@@ -295,6 +295,7 @@ class Application(Repo):
                 pckg['branch'] = git_info['git_branch']
                 pckg['remotes'] = git_info['git_remotes']
             
+            pckg['name'] = d.key
             pckg['version'] = d.version
             pckgs[d.key] = pckg
 

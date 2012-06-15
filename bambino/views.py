@@ -9,8 +9,8 @@ import time
 
 log = logging.getLogger(__name__)
 
-@view_config(route_name='applications', renderer='json')
-def applications(request):
+@view_config(route_name='services', renderer='json')
+def services(request):
     web_apps_dir = request.registry.settings['web_apps_dir']
     node = Node(web_apps_dir)
     

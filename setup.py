@@ -35,6 +35,9 @@ setup(name='Bambino',
       zip_safe=False,
       install_requires=requires,
       tests_require=requires,
+      setup_requires=[
+        'egggitinfo'
+      ],
       test_suite="bambino",
       entry_points = """\
       [paste.app_factory]
