@@ -9,7 +9,7 @@ import json
 env.user = 'doula'
 env.key_filename = '~/.ssh/id_rsa_doula'
 doula_dir = '/opt/bambino'
-doula_address = 'http://doula.corp.surveymonkey.com/nodes/ip_addresses'
+doula_address = 'http://doula.corp.surveymonkey.com/bambino/ip_addresses'
 
 @parallel
 def update():
