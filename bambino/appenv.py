@@ -76,7 +76,7 @@ class Node(object):
 
     @staticmethod
     def _site(hostname):
-        sites = {'mktest3-py' : 'mt3', 'mktest2-py' : 'mt2', 'mktest2-py' : 'mt1'}
+        sites = {'mktest3-py' : 'mt3', 'mktest2-py' : 'mt2'}
         if(hostname in sites):
             return sites[hostname]
 
