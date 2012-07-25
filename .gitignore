@@ -2,3 +2,4 @@
 webapp
 temp/
 *.egg-info/
+*.log

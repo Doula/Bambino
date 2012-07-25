@@ -1,15 +1,12 @@
+from bambino.appenv import *
+from contextlib import contextmanager
+from path import path
 import os
-import glob
 import shutil
 import subprocess
 import tempfile
 import unittest
 
-from bambino.appenv import *
-from bambino.appenv import Repository
-from contextlib import contextmanager
-from pprint import pprint as pp
-from path import path
 
 class TestAppEnvIdentification(unittest.TestCase):
 
@@ -32,6 +29,7 @@ class TestAppEnvIdentification(unittest.TestCase):
         envs = set(x.name for x in aef.applications)
         assert envs == set(('ae1', 'ae2')), envs
 
+
 class TestAppEnvRepo(unittest.TestCase):
     temp_dir = os.getcwd() + '/temp'
     temp_etc_dir = temp_dir + '/etc'
@@ -46,11 +44,10 @@ class TestAppEnvRepo(unittest.TestCase):
         if os.path.isdir(TestAppEnvRepo.temp_dir):
             shutil.rmtree(TestAppEnvRepo.temp_dir, True)
 
-
     def make_env_app(self, args=[]):
         sb = self.sandbox = path(tempfile.mkdtemp())
         with pushd(sb):
-            predefined=['git init', 'touch root.txt', 'git add .',
+            predefined = ['git init', 'touch root.txt', 'git add .',
                         'git commit -a -m "commit to root"',
                         'mkdir etc', 'cd etc',
                         'git init', 'touch etc.txt', 'git add .',
@@ -101,7 +98,6 @@ class TestAppEnvRepo(unittest.TestCase):
                 'git commit -a -m "im just saying"']
         repo = self.make_env_app(args)
         assert repo.status == 'change_to_app_and_config'
-    
 
 
 @contextmanager

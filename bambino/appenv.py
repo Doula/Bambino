@@ -3,9 +3,11 @@ from git import Git
 from git import GitCommandError
 from git import Repo
 from path import path as pathd
+from util import comparable_name
 import json
 import os
 import pkg_resources
+import re
 import socket
 import sys
 import traceback
@@ -30,6 +32,7 @@ class Node(object):
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
                     (str(e), str(traceback.extract_tb(exc_traceback)))})
+
         return {'services': repos, 'errors': errors}
 
     def tag_apps(self, apps_to_tag, tag, message):
@@ -48,6 +51,7 @@ class Node(object):
                     exc_type, exc_value, exc_traceback = sys.exc_info()
                     errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
                         (str(e), str(traceback.extract_tb(exc_traceback)))})
+
         return {'tagged_apps': tagged_apps, 'errors': errors}
 
     @property
@@ -204,6 +208,7 @@ class Repository(object):
         remote.push('refs/tags/%s:refs/tags/%s' % (tag, tag))
 
 
+# alextodo change the Application to Service
 class Application(Repo):
 
     def __init__(self, filepath):
@@ -237,7 +242,32 @@ class Application(Repo):
         out['packages'] = self.packages
         out['changed_files'] = self.changed_files
         out['last_tag_message'] = self.repo_app.last_tag_message
+        out['supervisor_service_names'] = self.supervisor_service_names(self.name)
         return out
+
+    def supervisor_service_names(self, name):
+        """
+        Returns the service names found in the supevisor conf file.
+        The supervisor.conf file is assumed to be in the /etc/supervisor/conf.d dir
+        """
+        conf_path = '/etc/supervisor/conf.d'
+        conf_files = os.listdir(conf_path)
+        supervisor_service_names = []
+        name = comparable_name(name)
+
+        for conf_file in conf_files:
+            comparable_file_name = comparable_name(conf_file)
+            # Compare without the dot in the name, makes it possible to compare
+            # oddly named values
+            if comparable_file_name == name or comparable_file_name == name + 'conf':
+                with file(conf_path + '/' + conf_file) as f:
+                    for line in f.readlines():
+                        match = re.match(r'\[program:([\w\d]+)\]', line, re.I)
+
+                        if match:
+                            supervisor_service_names.append(match.groups()[0])
+
+        return supervisor_service_names
 
     @property
     def app(self):
