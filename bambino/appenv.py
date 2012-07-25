@@ -1,22 +1,15 @@
-from git import Git
 from contextlib import contextmanager
+from git import Git
 from git import GitCommandError
 from git import Repo
 from path import path as pathd
-from socket import gethostname
-
-import time
-import datetime
-import pkg_resources
-import json
-import sys
-import traceback
-import subprocess
 import json
 import os
-import glob
+import pkg_resources
 import socket
-import re
+import sys
+import traceback
+
 
 class Node(object):
 
@@ -37,7 +30,7 @@ class Node(object):
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
                     (str(e), str(traceback.extract_tb(exc_traceback)))})
-        return {'services' :repos, 'errors' : errors}
+        return {'services': repos, 'errors': errors}
 
     def tag_apps(self, apps_to_tag, tag, message):
         tagged_apps = []
@@ -55,7 +48,7 @@ class Node(object):
                     exc_type, exc_value, exc_traceback = sys.exc_info()
                     errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
                         (str(e), str(traceback.extract_tb(exc_traceback)))})
-        return {'tagged_apps' :tagged_apps, 'errors' :errors}
+        return {'tagged_apps': tagged_apps, 'errors': errors}
 
     @property
     def to_json(self):
@@ -64,7 +57,7 @@ class Node(object):
     @staticmethod
     def _ip():
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("192.168.201.5",80))
+        s.connect(("192.168.201.5", 80))
         out = (s.getsockname()[0])
         s.close()
         return out
@@ -76,7 +69,7 @@ class Node(object):
 
     @staticmethod
     def _site(hostname):
-        sites = {'mktest3-py' : 'mt3', 'mktest2-py' : 'mt2'}
+        sites = {'mktest3-py': 'mt3', 'mktest2-py': 'mt2'}
         if(hostname in sites):
             return sites[hostname]
 
@@ -88,10 +81,10 @@ class Node(object):
 
     @staticmethod
     def get_machine_info():
-        return {'ip' : Node._ip(), 'name' : Node._hostname(), 'site' : Node._site(Node._hostname())}
+        return {'ip': Node._ip(), 'name': Node._hostname(), 'site': Node._site(Node._hostname())}
+
 
 class WebAppDir(pathd):
-
     def __init__(self, filepath):
         super(WebAppDir, self).__init__(filepath)
 
@@ -102,6 +95,7 @@ class WebAppDir(pathd):
     def services(self):
         return (env for env in self.dirs() if self.is_env(env))
 
+
 class Repository(object):
 
     def __init__(self, path):
@@ -111,45 +105,45 @@ class Repository(object):
     @property
     def last_tag(self):
         last_tag_name = None
-        
+
         if len(self.repo.tags):
             last_tag_name = self.repo.tags.pop().name
-        
+
         return self.repo.tags and last_tag_name or 'HEAD'
-    
+
     @property
     def tags(self):
-        tags = [ ]
-        
+        tags = []
+
         try:
             for tag in self.repo.tags:
-                tag_details = { }
-                
+                tag_details = {}
+
                 if tag.tag:
                     tag_details['message'] = tag.tag.message
                     tag_details['date'] = tag.tag.tagged_date
                 else:
                     tag_details['message'] = ''
                     tag_details['date'] = tag.commit.committed_date
-                
+
                 tag_details['name'] = tag.name
                 tags.append(tag_details)
         except:
             # In case the tagged_date isn't available at all
             pass
-        
+
         return tags
-    
+
     @property
     def last_tag_message(self):
         last_tag_message = ''
-        
-        if len(self.repo.tags) > 0:            
+
+        if len(self.repo.tags) > 0:
             last_tag = self.repo.tags.pop()
-            
+
             if last_tag.tag:
                 last_tag_message = last_tag.tag.message
-        
+
         return last_tag_message
 
     @property
@@ -159,18 +153,18 @@ class Repository(object):
     @property
     def is_dirty(self):
         return self.repo.is_dirty()
-    
+
     @property
     def changed_files(self):
-        changed_files = [ ]
+        changed_files = []
         # Diff object between index and working tree
         diff = self.repo.index.diff(None)
-        
+
         for d in diff:
             d_as_s = str(d)
             filename = d_as_s.split('============')[0].strip()
             changed_files.append(filename)
-        
+
         return changed_files
 
     @property
@@ -209,6 +203,7 @@ class Repository(object):
         # where any tags that haven't been pushed go up?
         remote.push('refs/tags/%s:refs/tags/%s' % (tag, tag))
 
+
 class Application(Repo):
 
     def __init__(self, filepath):
@@ -230,9 +225,9 @@ class Application(Repo):
                 return 'change_to_app'
             else:
                 return 'change_to_config'
-        
+
         return 'tagged'
-    
+
     @property
     def to_dict(self):
         out = dict(self.repo_app.to_dict('app').items() + self.repo_config.to_dict('config').items())
@@ -262,7 +257,7 @@ class Application(Repo):
             return self.remotes.origin.url
         else:
             return ''
-    
+
     @property
     def changed_files(self):
         changed_files = self.repo_app.changed_files
@@ -273,8 +268,8 @@ class Application(Repo):
     def _unique_files(self, changed_files):
         seen = set()
         seen_add = seen.add
-        return [ x for x in changed_files if x not in seen and not seen_add(x)]
-    
+        return [x for x in changed_files if x not in seen and not seen_add(x)]
+
     @property
     def packages(self):
         """
@@ -283,18 +278,18 @@ class Application(Repo):
         """
         site_pckg_path = self._get_site_pckg_path(self.path)
         dists = pkg_resources.find_distributions(site_pckg_path)
-        pckgs = { }
+        pckgs = {}
 
         for d in dists:
             pckg = {}
-            
+
             if d.has_metadata('git_info.txt'):
                 git_info_json = d.get_metadata('git_info.txt')
                 git_info = json.loads(git_info_json)
 
                 pckg['branch'] = git_info['git_branch']
                 pckg['remotes'] = git_info['git_remotes']
-            
+
             pckg['name'] = d.key
             pckg['version'] = d.version
             pckgs[d.key] = pckg
@@ -306,14 +301,14 @@ class Application(Repo):
         # Use python* because we don't know which version of python
         # we're looking for
         python_dir = lib_dir.dirs('python*')[0]
-        site_pckg_path =  python_dir + '/site-packages'
+        site_pckg_path = python_dir + '/site-packages'
 
         return site_pckg_path
 
     def tag(self, tag, description):
         self.app.tag(tag, description)
         self.etc.tag(tag, description)
-    
+
 
 @contextmanager
 def pushd(dir):
@@ -323,4 +318,3 @@ def pushd(dir):
         yield old_dir
     finally:
         os.chdir(old_dir)
-

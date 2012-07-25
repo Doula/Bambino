@@ -1,23 +1,22 @@
 import atexit
 import json
-import time
 import logging
 import requests
-import sys
 from sys import exit
 from signal import signal, SIGTERM, SIGINT, SIGHUP
 from apscheduler.scheduler import Scheduler
 
 log = logging.getLogger('bambino')
-node = { }
+node = {}
 registration_url = ''
+
 
 def register_shutdown():
     """
     Unregister Bambino on shutdown.
     """
     try:
-        payload = { 'node': json.dumps(node), 'action': 'unregister' }
+        payload = {'node': json.dumps(node), 'action': 'unregister'}
         requests.post(registration_url, data=payload)
     except requests.exceptions.ConnectionError as e:
         log.error(e.message)
@@ -33,11 +32,12 @@ def register_this_bambino():
     }
     """
     try:
-        payload = { 'node': json.dumps(node), 'action': 'register' }
+        payload = {'node': json.dumps(node), 'action': 'register'}
         requests.post(registration_url, data=payload)
     except requests.exceptions.ConnectionError as e:
         log.error(e.message)
-                
+
+
 def register_bambino(n, url, interval):
     """
     Start the Bambino heart beat to let Doula know that
@@ -47,7 +47,7 @@ def register_bambino(n, url, interval):
     node = n
     global registration_url
     registration_url = url
-    
+
     sched = Scheduler()
     sched.start()
     sched.add_interval_job(register_this_bambino, seconds=int(interval))
