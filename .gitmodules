@@ -1,0 +1,3 @@
+[submodule "etc"]
+	path = etc
+	url = git@code.corp.surveymonkey.com:config/bambino.git
