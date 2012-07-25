@@ -1,8 +1,6 @@
-from fabric.api import local
 from fabric.api import cd
 from fabric.api import *
 from fabric.contrib.files import exists
-from fabric.context_managers import settings
 import requests
 import json
 
@@ -10,6 +8,7 @@ env.user = 'doula'
 env.key_filename = '~/.ssh/id_rsa_doula'
 doula_dir = '/opt/bambino'
 doula_address = 'http://doula.corp.surveymonkey.com/bambino/ip_addresses'
+
 
 @parallel
 def update():
@@ -31,12 +30,15 @@ def update():
             run('git pull origin master')
             restart()
 
+
 def restart():
     run('supervisorctl reread bambino_6666')
     run('supervisorctl restart bambino_6666')
 
+
 def create_env():
     _make_base_dir()
+
 
 def get_hosts():
     response = requests.get(doula_address)
