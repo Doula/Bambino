@@ -307,25 +307,11 @@ class Application(Repo):
         We'll use these to query the name and versions for that environment.
         """
         site_pckg_path = self._get_site_pckg_path(self.path)
-        print 'PACKAGE PATH'
-        print site_pckg_path
         dists = pkg_resources.find_distributions(site_pckg_path)
         pckgs = {}
 
         for d in dists:
             pckg = {}
-
-            if d.has_metadata('git_info.txt'):
-                try:
-                    git_info_json = d.get_metadata('git_info.txt')
-                    git_info = json.loads(git_info_json)
-
-                    pckg['branch'] = git_info['git_branch']
-                    pckg['remotes'] = git_info['git_remotes']
-                except Exception as e:
-                    print 'error trying to get git info'
-                    print e.message
-
             pckg['name'] = d.key
             pckg['version'] = d.version
             pckgs[d.key] = pckg
