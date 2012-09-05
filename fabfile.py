@@ -42,8 +42,6 @@ def create_env():
 
 def get_hosts():
     response = requests.get(doula_address)
-    print 'RESPONSE'
-    print response
     response = json.loads(response.text)
     return response['ip_addresses']
 
