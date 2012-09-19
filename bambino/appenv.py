@@ -26,7 +26,7 @@ class Node(object):
 
         for folder in self.web_app_dir.services:
             try:
-                repo = Application(folder)
+                repo = Service(folder)
                 repos.append(repo.to_dict)
             except Exception, e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -42,15 +42,18 @@ class Node(object):
         for folder in self.web_app_dir.services:
             if(folder.split('/')[-1] in apps_to_tag):
                 try:
-                    app = Application(folder)
+                    app = Service(folder)
                     # todo, use logging for this message
                     print 'tag:%s, message:%s' % (tag, message)
                     app.tag(tag, message)
                     tagged_apps.append(app.name)
                 except Exception, e:
                     exc_type, exc_value, exc_traceback = sys.exc_info()
-                    errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
-                        (str(e), str(traceback.extract_tb(exc_traceback)))})
+                    errors.append({
+                        'path': str(folder),
+                        'exception': "text: %s, traceback: %s" %
+                            (str(e), str(traceback.extract_tb(exc_traceback)))
+                        })
 
         return {'tagged_apps': tagged_apps, 'errors': errors}
 
@@ -85,7 +88,11 @@ class Node(object):
 
     @staticmethod
     def get_machine_info():
-        return {'ip': Node._ip(), 'name': Node._hostname(), 'site': Node._site(Node._hostname())}
+        return {
+            'ip': Node._ip(),
+            'name': Node._hostname(),
+            'site': Node._site(Node._hostname())
+        }
 
 
 class WebAppDir(pathd):
@@ -167,7 +174,9 @@ class Repository(object):
         for d in diff:
             d_as_s = str(d)
             filename = d_as_s.split('============')[0].strip()
-            changed_files.append(filename)
+
+            if os.path.isfile(self.path + '/' + filename):
+                changed_files.append(filename)
 
         return changed_files
 
@@ -203,16 +212,13 @@ class Repository(object):
         repo = Repo(self.path)
         repo.create_tag(tag, message=description)
         remote = repo.remote()
-        # alextodo what happens when this fails? can we have a reconciliation
-        # where any tags that haven't been pushed go up?
         remote.push('refs/tags/%s:refs/tags/%s' % (tag, tag))
 
 
-# alextodo change the Application to Service
-class Application(Repo):
+class Service(Repo):
 
     def __init__(self, filepath):
-        super(Application, self).__init__(filepath)
+        super(Service, self).__init__(filepath)
         self.path = pathd(filepath)
         self.repo_app = Repository(self.path)
         etc = (self.path / 'etc').abspath()
@@ -257,8 +263,8 @@ class Application(Repo):
 
         for conf_file in conf_files:
             comparable_file_name = comparable_name(conf_file)
-            # Compare without the dot in the name, makes it possible to compare
-            # oddly named values
+            # Compare without the dot in the name, makes it
+            # possible to compare oddly named values
             if comparable_file_name == name or comparable_file_name == name + 'conf':
                 with file(conf_path + '/' + conf_file) as f:
                     for line in f.readlines():

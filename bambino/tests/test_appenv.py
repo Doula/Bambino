@@ -62,8 +62,8 @@ class TestAppEnvRepo(unittest.TestCase):
             for arg in args:
                 subprocess.check_output(arg + devnul, shell=True)
 
-            from bambino.appenv import Application
-            return Application(sb)
+            from bambino.appenv import Service
+            return Service(sb)
 
     def test_no_tag(self):
         repo = self.make_env_app()

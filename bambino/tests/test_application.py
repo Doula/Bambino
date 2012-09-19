@@ -3,7 +3,7 @@ import os
 import unittest
 
 
-class TestApplication(unittest.TestCase):
+class TestService(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -12,7 +12,7 @@ class TestApplication(unittest.TestCase):
         pass
 
     def test_supervisor_service_names(self):
-        app = Application(os.getcwd())
+        app = Service(os.getcwd())
         path = '/etc/supervisor/conf.d'
         path_to_conf = path + '/temp.conf'
 
