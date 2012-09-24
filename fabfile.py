@@ -9,8 +9,14 @@ env.key_filename = '~/.ssh/id_rsa_doula'
 doula_dir = '/opt/bambino'
 doula_address = 'http://doula.corp.surveymonkey.com/bambino/ip_addresses'
 
+if "DOULA_STAGE" in os.environ:
+    env.hosts = ['mt-99.corp.surveymonkey.com']
+    branch = 'stage'
+else:
+    env.hosts = ['doula.corp.surveymonkey.com']
+    branch = 'master'
 
-@parallel
+
 def update():
     if not exists(doula_dir):
         print "We can go no further, you must run 'fab create_env' before moving on"
@@ -21,13 +27,13 @@ def update():
             run('virtualenv .')
         with prefix('. bin/activate'):
             run('echo $VIRTUAL_ENV')
-            run('pip install -e git+git://github.com/Doula/Bambino.git@master#egg=bambino')
+            run('pip install -e git+git://github.com/Doula/Bambino.git@%s#egg=bambino' % branch)
         with cd('src/bambino'):
             run('git submodule init')
             run('git submodule update')
         with cd('src/bambino/etc'):
-            run('git checkout master')
-            run('git pull origin master')
+            run('git checkout %s' % branch)
+            run('git pull origin %s' % branch)
             restart()
 
 
@@ -43,6 +49,7 @@ def create_env():
 def get_hosts():
     response = requests.get(doula_address)
     response = json.loads(response.text)
+    print response
     return response['ip_addresses']
 
 if(len(env.hosts) == 0):
