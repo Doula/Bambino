@@ -188,12 +188,24 @@ class Repository(object):
         except GitCommandError:
             return 0
 
+    @property
+    def config(self):
+        if (self.path.endswith('/etc')):
+            repo = Git(self.path)
+            cmd = ['git', 'log', '--pretty=format:"%h"', '-n', '1']
+            short_sha1 = repo.execute(cmd)
+
+            return {"short_sha1": short_sha1}
+
+        return {"short_sha1": ""}
+
     def to_dict(self, postfix):
         out = {}
         out['last_tag_%s' % postfix] = self.last_tag
         out['current_branch_%s' % postfix] = self.current_branch
         out['is_dirty_%s' % postfix] = self.is_dirty
         out['change_count_%s' % postfix] = self.change_count
+        out['config'] = self.config
         out['tags'] = self.tags
         return out
 
@@ -201,6 +213,7 @@ class Repository(object):
         repo = Git(self.path)
         cmd = ['git', 'describe', '--tags']
         result = repo.execute(cmd).split('-')
+
         if (len(result) == 1):
             return '', 0, ''
         else:
