@@ -190,6 +190,10 @@ class Repository(object):
 
     @property
     def config(self):
+        """
+        Return the short sha1 of the etc directory. Used to check
+        if the config files are up to date.
+        """
         if (self.path.endswith('/etc')):
             repo = Git(self.path)
             cmd = ['git', 'log', '--pretty=format:"%h"', '-n', '1']
