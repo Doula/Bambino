@@ -18,22 +18,38 @@ class Node(object):
     def __init__(self, root):
         self.root = root
         self.web_app_dir = WebAppDir(self.root)
+        self.java_dir = WebAppDir(os.path.join(self.root, "../java"))
 
     @property
     def repo_data(self):
         repos = []
         errors = []
 
-        for folder in self.web_app_dir.services:
+        for directory, language in {self.web_app_dir: 'python',  self.java_dir: 'java'}.iteritems():
+            r, e = self.repo_data_by_language(directory, language)
+            repos = repos + r
+            errors = errors + e
+
+        return {'services': repos, 'errors': errors}
+
+    def repo_data_by_language(self, directory, language):
+        repos = []
+        errors = []
+
+        for subdir in directory.services:
             try:
-                repo = Service(folder)
+                if language == 'python':
+                    repo = Service(subdir)
+                else:
+                    repo = JavaService(subdir)
                 repos.append(repo.to_dict)
             except Exception, e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                errors.append({'path': str(folder), 'exception': "text: %s, traceback: %s" %
+                errors.append({'path': str(subdir), 'exception': "text: %s, traceback: %s" %
                     (str(e), str(traceback.extract_tb(exc_traceback)))})
 
-        return {'services': repos, 'errors': errors}
+        return (repos, errors)
+
 
     def tag_apps(self, apps_to_tag, tag, message):
         tagged_apps = []
@@ -231,7 +247,6 @@ class Repository(object):
         remote = repo.remote()
         remote.push('refs/tags/%s:refs/tags/%s' % (tag, tag))
 
-
 class Service(Repo):
 
     def __init__(self, filepath):
@@ -353,6 +368,24 @@ class Service(Repo):
     def tag(self, tag, description):
         self.app.tag(tag, description)
         self.etc.tag(tag, description)
+
+
+class JavaService(Service):
+
+    def __init__(self, filepath):
+        super(JavaService, self).__init__(filepath)
+
+    @property
+    def packages(self):
+        pckgs = {}
+        version_file = os.path.join(self.path, 'version.json')
+        if os.path.exists(version_file):
+            with open(version_file, 'r') as f:
+                read_data = f.read()
+            version = json.loads(read_data)
+            pckgs[str(self.name)] = version['version']
+
+        return pckgs
 
 
 @contextmanager
