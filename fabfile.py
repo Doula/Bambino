@@ -13,10 +13,6 @@ doula_address = 'http://doula.corp.surveymonkey.com/bambino/ip_addresses'
 if "DOULA_STAGE" in os.environ:
     env.hosts = ['mt-99.corp.surveymonkey.com']
     branch = 'stage'
-else:
-    env.hosts = ['doula.corp.surveymonkey.com']
-    branch = 'master'
-
 
 def update():
     if not exists(doula_dir):
