@@ -3,6 +3,7 @@ from fabric.api import *
 from fabric.contrib.files import exists
 import requests
 import json
+import os
 
 env.user = 'doula'
 env.key_filename = '~/.ssh/id_rsa_doula'
