@@ -10,6 +10,8 @@ env.key_filename = '~/.ssh/id_rsa_doula'
 doula_dir = '/opt/bambino'
 doula_address = 'http://doula.corp.surveymonkey.com/bambino/ip_addresses'
 
+branch = 'master'
+
 if "DOULA_STAGE" in os.environ:
     env.hosts = ['mt-99.corp.surveymonkey.com']
     branch = 'stage'
