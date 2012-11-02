@@ -227,7 +227,13 @@ class Repository(object):
         out['change_count_%s' % postfix] = self.change_count
         out['config'] = self.config
         out['tags'] = self.tags
+        out['language'] = self.language
         return out
+
+    @property
+    def language(self):
+        return 'java' if 'java' in str(self.path) else 'python'
+
 
     def describe(self):
         repo = Git(self.path)
