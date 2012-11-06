@@ -44,8 +44,6 @@ def register_me(event):
     settings = event.app.registry.settings
 
     machine_info = Node.get_machine_info()
-    #TODO: we're using the IP for now.  Once the hostname gets standardized, we'll
-    # move to that
     machine_info['url'] = 'http://%s:%s' % (machine_info['ip'], settings['port'])
 
     registration.register_bambino(machine_info, settings['register_url'], settings['registration_interval'])

@@ -18,14 +18,16 @@ class Node(object):
     def __init__(self, root):
         self.root = root
         self.web_app_dir = WebAppDir(self.root)
-        self.java_dir = WebAppDir(os.path.join(self.root, "../java"))
+        # self.java_dir = WebAppDir(os.path.join(self.root, "../java"))
 
     @property
     def repo_data(self):
         repos = []
         errors = []
 
-        for directory, language in {self.web_app_dir: 'python',  self.java_dir: 'java'}.iteritems():
+        # Old code
+        # for directory, language in {self.web_app_dir: 'python',  self.java_dir: 'java'}.iteritems():
+        for directory, language in {self.web_app_dir: 'python'}.iteritems():
             r, e = self.repo_data_by_language(directory, language)
             repos = repos + r
             errors = errors + e
@@ -49,7 +51,6 @@ class Node(object):
                     (str(e), str(traceback.extract_tb(exc_traceback)))})
 
         return (repos, errors)
-
 
     def tag_apps(self, apps_to_tag, tag, message):
         tagged_apps = []
