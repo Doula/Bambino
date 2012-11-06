@@ -216,25 +216,30 @@ class Repository(object):
         }
 
         if (self.path.endswith('/etc')):
-            git = Git(self.path)
-            # Update the current repository so that we have
-            # the latest commit sha1
-            git.execute(['git', 'fetch', 'origin'])
+            try:
+                git = Git(self.path)
+                # Update the current repository so that we have
+                # the latest commit sha1
+                git.execute(['git', 'fetch', 'origin'])
 
-            # Initial detatils, author, date, commit
-            commit_details = self._find_current_commit_details(git)
-            config.update(commit_details)
+                # Initial detatils, author, date, commit
+                commit_details = self._find_current_commit_details(git)
+                config.update(commit_details)
 
-            # changed files
-            config['changed_files'] = self._find_changed_files(git)
+                # changed files
+                config['changed_files'] = self._find_changed_files(git)
 
-            # latest commit
-            branch = self._find_current_branch(git)
-            config["latest_commit"] = self._find_latest_commit_sha1(git, branch)
+                # latest commit
+                branch = self._find_current_branch(git)
+                config["latest_commit"] = self._find_latest_commit_sha1(git, branch)
 
-            # Set is_up_to_date based on the current commit and latest commit
-            if config["commit"] == config["latest_commit"]:
-                config["is_up_to_date"] = True
+                # Set is_up_to_date based on the current commit and latest commit
+                if config["commit"] == config["latest_commit"]:
+                    config["is_up_to_date"] = True
+
+            except Exception as e:
+                print 'ERROR GETTING CONFIG'
+                print e.message
 
         return config
 
