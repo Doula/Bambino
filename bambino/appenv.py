@@ -324,8 +324,13 @@ class Repository(object):
         the current sha1 and see if this repository is up to date.
         Since we do a git fetch on the repo, we have all the latest commits
         """
-        cmd = ['git', 'rev-parse', 'origin/' + branch]
-        return git.execute(cmd)
+        try:
+            cmd = ['git', 'rev-parse', 'origin/' + branch]
+            return git.execute(cmd)
+        except Exception as e:
+            print 'Error Finding the Latest Commit Sha1'
+            print e.message
+            return ''
 
     def to_dict(self, postfix):
         out = {}
