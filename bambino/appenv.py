@@ -214,7 +214,7 @@ class Repository(object):
         config = {
             "is_up_to_date": False
         }
-
+        return config
         if (self.path.endswith('/etc')):
             try:
                 git = Git(self.path)
