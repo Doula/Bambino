@@ -25,8 +25,8 @@ class TestAppEnvIdentification(unittest.TestCase):
 
     def test_envid(self):
         aef = self.makeone()
-        assert aef.applications
-        envs = set(x.name for x in aef.applications)
+        assert aef.services
+        envs = set(x.name for x in aef.services)
         assert envs == set(('ae1', 'ae2')), envs
 
 
@@ -43,6 +43,36 @@ class TestAppEnvRepo(unittest.TestCase):
         # Remove the directory
         if os.path.isdir(TestAppEnvRepo.temp_dir):
             shutil.rmtree(TestAppEnvRepo.temp_dir, True)
+
+    def test_config_billweb(self):
+        """
+        Test the Repository.config property. This test WILL NOT
+        be a true unit test because it requires a Git repository
+        """
+        git_path = '/opt/webapp/billweb/etc'
+        repository = Repository(git_path)
+        config = repository.config
+
+        self.assertTrue(config["author"])
+        self.assertTrue(config["date"])
+        self.assertTrue(config["commit"])
+        self.assertTrue(config["latest_commit"])
+        self.assertTrue(config["changed_files"])
+
+    def test_config_anweb(self):
+        """
+        Test the Repository.config property. This test WILL NOT
+        be a true unit test because it requires a Git repository
+        """
+        git_path = '/opt/webapp/anweb/etc'
+        repository = Repository(git_path)
+        config = repository.config
+
+        self.assertTrue(config["author"])
+        self.assertTrue(config["date"])
+        self.assertTrue(config["commit"])
+        self.assertTrue(config["latest_commit"])
+        self.assertTrue(config["changed_files"])
 
     def make_env_app(self, args=[]):
         sb = self.sandbox = path(tempfile.mkdtemp())

@@ -211,14 +211,121 @@ class Repository(object):
         Return the short sha1 of the etc directory. Used to check
         if the config files are up to date.
         """
+        config = {
+            "is_up_to_date": False
+        }
+
         if (self.path.endswith('/etc')):
-            repo = Git(self.path)
-            cmd = ['git', 'log', '--pretty=format:"%h"', '-n', '1']
-            short_sha1 = repo.execute(cmd)
+            git = Git(self.path)
+            # Update the current repository so that we have
+            # the latest commit sha1
+            git.execute(['git', 'fetch', 'origin'])
 
-            return {"short_sha1": short_sha1}
+            # Initial detatils, author, date, commit
+            commit_details = self._find_current_commit_details(git)
+            config.update(commit_details)
 
-        return {"short_sha1": ""}
+            # changed files
+            config['changed_files'] = self._find_changed_files(git)
+
+            # latest commit
+            branch = self._find_current_branch(git)
+            config["latest_commit"] = self._find_latest_commit_sha1(git, branch)
+
+            # Set is_up_to_date based on the current commit and latest commit
+            if config["commit"] == config["latest_commit"]:
+                config["is_up_to_date"] = True
+
+        return config
+
+    def _find_current_commit_details(self, git):
+        """
+        Find the current commit details (author, date and sha1)
+        Example output from Git Command:
+            git show --name-status
+                commit ab81f0e16fc8304f2eea3595aedf549912b8510c
+                Author: Chris George <chrisg@surveymonkey.com>
+                Date:   Thu May 10 15:17:10 2012 -0700
+                     Adding pricing back as a logger
+                M       app.ini
+        """
+        commit_details = {
+            "author": "",
+            "commit": "",
+            "date": ""
+        }
+
+        cmd = ['git', 'show', '--name-status']
+        last_commit_text = git.execute(cmd)
+        lines = last_commit_text.split("\n")
+
+        for line in lines:
+            if line.lower().startswith("commit"):
+                commit_details["commit"] = line.split(" ")[1]
+
+                cmd = ['git', 'show', '--format="%ci"', commit_details["commit"]]
+                date_text = git.execute(cmd)
+                commit_details["date"] = date_text.split("\n")[0].replace('"', '')
+
+            if line.lower().startswith("author"):
+                commit_details["author"] = line.split(" ")[1]
+
+        return commit_details
+
+    def _find_changed_files(self, git):
+        """
+        Find the changed files in this repository
+
+        Example Git Output
+            git status -s, get changed and deleted files.
+                D  .gitignore
+                M  app.ini
+                D  nginx.conf
+                D  supervisor.conf
+        """
+        changed_files = {}
+        cmd = ['git', 'status', '-s']
+        status_text = git.execute(cmd)
+        lines = status_text.split("\n")
+
+        for line in lines:
+            mod_match = re.search(r'm (.+)', line, re.I)
+
+            if mod_match:
+                changed_files[mod_match.groups()[0]] = "modified"
+
+            del_match = re.search(r'd (.+)', line, re.I)
+
+            if del_match:
+                changed_files[del_match.groups()[0]] = "deleted"
+
+        return changed_files
+
+    def _find_current_branch(self, git):
+        """
+        Find the current branch for this repository
+        """
+        branch = ''
+        cmd = ['git', 'branch']
+        # Branch text should have the format '* master'
+        branch_text = git.execute(cmd)
+        # Find the current branch of this git repo
+        search_match = re.search(r'(\w+)', branch_text, re.I)
+
+        if search_match:
+            # The first capture group has the actual branch
+            branch = search_match.groups()[0]
+
+        return branch
+
+    def _find_latest_commit_sha1(self, git, branch):
+        """
+        Find the latest commit sha1. We'll use that to compare to
+        the current sha1 and see if this repository is up to date.
+        Since we do a git fetch on the repo, we have all the latest commits
+        """
+        cmd = ['git', 'rev-parse', 'origin/' + branch]
+        return git.execute(cmd)
 
     def to_dict(self, postfix):
         out = {}
@@ -234,7 +341,6 @@ class Repository(object):
     @property
     def language(self):
         return 'java' if 'java' in str(self.path) else 'python'
-
 
     def describe(self):
         repo = Git(self.path)
@@ -253,6 +359,7 @@ class Repository(object):
         repo.create_tag(tag, message=description)
         remote = repo.remote()
         remote.push('refs/tags/%s:refs/tags/%s' % (tag, tag))
+
 
 class Service(Repo):
 
