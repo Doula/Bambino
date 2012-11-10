@@ -214,34 +214,45 @@ class Repository(object):
         config = {
             "is_up_to_date": False
         }
-        return config
+
         if (self.path.endswith('/etc')):
             try:
                 git = Git(self.path)
-                # Update the current repository so that we have
-                # the latest commit sha1
-                git.execute(['git', 'fetch', 'origin'])
+
+                branch = self.current_branch
+                config['branch'] = branch
+
+                self._git_fetch_this_repo(git, branch)
 
                 # Initial detatils, author, date, commit
-                commit_details = self._find_current_commit_details(git)
-                config.update(commit_details)
+                config.update(self._find_current_commit_details(git))
 
                 # changed files
                 config['changed_files'] = self._find_changed_files(git)
 
-                # latest commit
-                branch = self._find_current_branch(git)
+                # Pull the latest sha1 on this branch
                 config["latest_commit"] = self._find_latest_commit_sha1(git, branch)
 
                 # Set is_up_to_date based on the current commit and latest commit
-                if config["commit"] == config["latest_commit"]:
+                if config["commit"] == config["latest_commit"] and len(config['changed_files'].keys()) == 0:
                     config["is_up_to_date"] = True
 
             except Exception as e:
-                print 'ERROR GETTING CONFIG'
+                print 'ERROR PULLING DATA CONFIG FOR DIRECTORY: ' + self.path
                 print e.message
 
         return config
+
+    def _git_fetch_this_repo(self, git, branch):
+        """
+        Git fetch this repo's branch so that we have the
+        latest sha1 to this branch
+        """
+        try:
+            git.execute(['git', 'fetch', 'origin', branch])
+        except Exception as e:
+            print 'ERROR TRYING TO GIT FETCH'
+            print e.message
 
     def _find_current_commit_details(self, git):
         """
@@ -254,28 +265,34 @@ class Repository(object):
                      Adding pricing back as a logger
                 M       app.ini
         """
-        commit_details = {
-            "author": "",
-            "commit": "",
-            "date": ""
-        }
+        try:
+            commit_details = {
+                "author": "",
+                "commit": "",
+                "date": ""
+            }
 
-        cmd = ['git', 'show', '--name-status']
-        last_commit_text = git.execute(cmd)
-        lines = last_commit_text.split("\n")
+            cmd = ['git', 'show', '--name-status']
+            last_commit_text = git.execute(cmd)
+            lines = last_commit_text.split("\n")
 
-        for line in lines:
-            if line.lower().startswith("commit"):
-                commit_details["commit"] = line.split(" ")[1]
+            for line in lines:
+                if line.lower().startswith("commit"):
+                    commit_details["commit"] = line.split(" ")[1]
 
-                cmd = ['git', 'show', '--format="%ci"', commit_details["commit"]]
-                date_text = git.execute(cmd)
-                commit_details["date"] = date_text.split("\n")[0].replace('"', '')
+                    cmd = ['git', 'show', '--format="%ci"', commit_details["commit"]]
+                    date_text = git.execute(cmd)
+                    commit_details["date"] = date_text.split("\n")[0].replace('"', '')
 
-            if line.lower().startswith("author"):
-                commit_details["author"] = line.split(" ")[1]
+                if line.lower().startswith("author"):
+                    commit_details["author"] = line.split(" ")[1]
 
-        return commit_details
+            return commit_details
+        except Exception as e:
+            print 'ERROR TRYING TO GET COMMIT DETAILS'
+            print e.message
+
+            return commit_details
 
     def _find_changed_files(self, git):
         """
@@ -288,45 +305,36 @@ class Repository(object):
                 D  nginx.conf
                 D  supervisor.conf
         """
-        changed_files = {}
-        cmd = ['git', 'status', '-s']
-        status_text = git.execute(cmd)
-        lines = status_text.split("\n")
+        try:
+            changed_files = {}
+            cmd = ['git', 'status', '-s']
+            status_text = git.execute(cmd)
+            lines = status_text.split("\n")
 
-        for line in lines:
-            mod_match = re.search(r'm (.+)', line, re.I)
+            for line in lines:
+                mod_match = re.search(r'm (.+)', line, re.I)
 
-            if mod_match:
-                changed_files[mod_match.groups()[0]] = "modified"
+                if mod_match:
+                    changed_files[mod_match.groups()[0]] = "modified"
 
-            del_match = re.search(r'd (.+)', line, re.I)
+                del_match = re.search(r'd (.+)', line, re.I)
 
-            if del_match:
-                changed_files[del_match.groups()[0]] = "deleted"
+                if del_match:
+                    changed_files[del_match.groups()[0]] = "deleted"
 
-        return changed_files
+            return changed_files
+        except Exception as e:
+            print 'ERROR GETTING CHANGED FILES'
+            print e.message
 
-    def _find_current_branch(self, git):
-        """
-        Find the current branch for this repository
-        """
-        branch = ''
-        cmd = ['git', 'branch']
-        # Branch text should have the format '* master'
-        branch_text = git.execute(cmd)
-        # Find the current branch of this git repo
-        search_match = re.search(r'(\w+)', branch_text, re.I)
-
-        if search_match:
-            # The first capture group has the actual branch
-            branch = search_match.groups()[0]
-
-        return branch
+            # return an empty dict
+            return changed_files
 
     def _find_latest_commit_sha1(self, git, branch):
         """
         Find the latest commit sha1. We'll use that to compare to
         the current sha1 and see if this repository is up to date.
+
         Since we do a git fetch on the repo, we have all the latest commits
         """
         try:
@@ -335,6 +343,7 @@ class Repository(object):
         except Exception as e:
             print 'Error Finding the Latest Commit Sha1'
             print e.message
+
             return ''
 
     def to_dict(self, postfix):
