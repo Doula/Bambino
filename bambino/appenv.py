@@ -222,6 +222,9 @@ class Repository(object):
                 branch = self.current_branch
                 config['branch'] = branch
 
+                # alextodo. wrap the stupid git commands
+                # in their own try catch. that will be simpler
+                # and cleaner
                 self._git_fetch_this_repo(git, branch)
 
                 # Initial detatils, author, date, commit
@@ -355,7 +358,22 @@ class Repository(object):
         out['config'] = self.config
         out['tags'] = self.tags
         out['language'] = self.language
+
+        if self.path.endswith('etc'):
+            out['full_remote_etc'] = self.full_remote
+        else:
+            out['full_remote'] = self.full_remote
+
         return out
+
+    @property
+    def full_remote(self):
+        # alextodo. wrap the calls to git commit
+        repo = Git(self.path)
+        cmd = ['git', 'remote', '-v']
+        remote = repo.execute(cmd).split('(fetch)')[0]
+        remote = remote or ''
+        return remote.strip()
 
     @property
     def language(self):
