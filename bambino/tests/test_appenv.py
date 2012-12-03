@@ -122,6 +122,19 @@ class TestAppEnvRepo(unittest.TestCase):
         repo = self.make_env_app(args)
         assert repo.status == 'uncommitted_changes'
 
+    def test__get_latest_commit_sha1_from_log(self):
+        git_path = '/opt/webapp/billweb/etc'
+        repository = Repository(git_path)
+        log_text = """commit 0fab9fbd022c71d4883dc153c2730f771b534c0a
+            Author: Doug Morgan <doug@surveymonkey.com>
+            Date:   Tue Nov 13 11:30:22 2012 -0800
+
+                Update app.ini
+
+                Testing changing path"""
+        sha1 = repository._get_latest_commit_sha1_from_log(log_text)
+        self.assertEqual(sha1, '0fab9fbd022c71d4883dc153c2730f771b534c0a')
+
     def test_committed_changes(self):
         args = ['echo "hi" >> root.txt',
                 'git tag first_tag',

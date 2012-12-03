@@ -341,13 +341,40 @@ class Repository(object):
         Since we do a git fetch on the repo, we have all the latest commits
         """
         try:
-            cmd = ['git', 'rev-parse', 'origin/' + branch]
-            return git.execute(cmd)
+            cmd = ['git', 'log', '-1']
+            log_text = git.execute(cmd)
+            return self._get_latest_commit_sha1_from_log(log_text)
         except Exception as e:
             print 'Error Finding the Latest Commit Sha1'
             print e.message
 
             return ''
+
+    def _get_latest_commit_sha1_from_log(self, log_text):
+        """
+        Use the log_text to get the sha1.
+
+        Example log_test:
+            commit 0fab9fbd022c71d4883dc153c2730f771b534c0a
+            Author: Doug Morgan <doug@surveymonkey.com>
+            Date:   Tue Nov 13 11:30:22 2012 -0800
+
+                Update app.ini
+
+                Testing changing path
+        """
+        sha1 = ''
+        log_text = log_text or ''
+        lines = log_text.splitlines()
+
+        if len(lines) > 0:
+            line = lines[0]
+            parts = line.split('commit')
+
+            if len(parts) > 1:
+                sha1 = parts[1].strip()
+
+        return sha1
 
     def to_dict(self, postfix):
         out = {}
