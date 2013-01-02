@@ -205,15 +205,17 @@ class Repository(object):
         except GitCommandError:
             return 0
 
+    ##########################
+    # Show the Config Files
+    ##########################
+
     @property
     def config(self):
         """
         Return the short sha1 of the etc directory. Used to check
         if the config files are up to date.
         """
-        config = {
-            "is_up_to_date": False
-        }
+        config = {}
 
         if (self.path.endswith('/etc')):
             try:
@@ -222,40 +224,16 @@ class Repository(object):
                 branch = self.current_branch
                 config['branch'] = branch
 
-                # alextodo. wrap the stupid git commands
-                # in their own try catch. that will be simpler
-                # and cleaner
-                self._git_fetch_this_repo(git, branch)
-
                 # Initial detatils, author, date, commit
                 config.update(self._find_current_commit_details(git))
 
                 # changed files
                 config['changed_files'] = self._find_changed_files(git)
-
-                # Pull the latest sha1 on this branch
-                config["latest_commit"] = self._find_latest_commit_sha1(git, branch)
-
-                # Set is_up_to_date based on the current commit and latest commit
-                if config["commit"] == config["latest_commit"] and len(config['changed_files'].keys()) == 0:
-                    config["is_up_to_date"] = True
-
             except Exception as e:
                 print 'ERROR PULLING DATA CONFIG FOR DIRECTORY: ' + self.path
                 print e.message
 
         return config
-
-    def _git_fetch_this_repo(self, git, branch):
-        """
-        Git fetch this repo's branch so that we have the
-        latest sha1 to this branch
-        """
-        try:
-            git.execute(['git', 'fetch', 'origin', branch])
-        except Exception as e:
-            print 'ERROR TRYING TO GIT FETCH'
-            print e.message
 
     def _find_current_commit_details(self, git):
         """
@@ -271,7 +249,7 @@ class Repository(object):
         try:
             commit_details = {
                 "author": "",
-                "commit": "",
+                "sha": "",
                 "date": ""
             }
 
@@ -281,9 +259,9 @@ class Repository(object):
 
             for line in lines:
                 if line.lower().startswith("commit"):
-                    commit_details["commit"] = line.split(" ")[1]
+                    commit_details["sha"] = line.split(" ")[1]
 
-                    cmd = ['git', 'show', '--format="%ci"', commit_details["commit"]]
+                    cmd = ['git', 'show', '--format="%ci"', commit_details["sha"]]
                     date_text = git.execute(cmd)
                     commit_details["date"] = date_text.split("\n")[0].replace('"', '')
 
@@ -333,48 +311,9 @@ class Repository(object):
             # return an empty dict
             return changed_files
 
-    def _find_latest_commit_sha1(self, git, branch):
-        """
-        Find the latest commit sha1. We'll use that to compare to
-        the current sha1 and see if this repository is up to date.
-
-        Since we do a git fetch on the repo, we have all the latest commits
-        """
-        try:
-            cmd = ['git', 'log', '-1']
-            log_text = git.execute(cmd)
-            return self._get_latest_commit_sha1_from_log(log_text)
-        except Exception as e:
-            print 'Error Finding the Latest Commit Sha1'
-            print e.message
-
-            return ''
-
-    def _get_latest_commit_sha1_from_log(self, log_text):
-        """
-        Use the log_text to get the sha1.
-
-        Example log_test:
-            commit 0fab9fbd022c71d4883dc153c2730f771b534c0a
-            Author: Doug Morgan <doug@surveymonkey.com>
-            Date:   Tue Nov 13 11:30:22 2012 -0800
-
-                Update app.ini
-
-                Testing changing path
-        """
-        sha1 = ''
-        log_text = log_text or ''
-        lines = log_text.splitlines()
-
-        if len(lines) > 0:
-            line = lines[0]
-            parts = line.split('commit')
-
-            if len(parts) > 1:
-                sha1 = parts[1].strip()
-
-        return sha1
+    #########################
+    # Output as a Dict
+    #########################
 
     def to_dict(self, postfix):
         out = {}
