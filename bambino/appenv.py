@@ -252,8 +252,12 @@ class Repository(object):
             commit_details = {
                 "author": "",
                 "sha": "",
-                "date": ""
+                "date": "",
+                "message": ""
             }
+
+            cmd = ['git', 'log', '-1', '--pretty=%B']
+            commit_details["message"] = git.execute(cmd)
 
             cmd = ['git', 'show', '--name-status']
             last_commit_text = git.execute(cmd)
