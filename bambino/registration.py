@@ -7,6 +7,7 @@ from signal import signal, SIGTERM, SIGINT, SIGHUP
 from apscheduler.scheduler import Scheduler
 
 log = logging.getLogger('bambino')
+log.setLevel(logging.ERROR)
 node = {}
 registration_url = ''
 

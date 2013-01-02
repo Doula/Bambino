@@ -227,6 +227,8 @@ class Repository(object):
                 # Initial detatils, author, date, commit
                 config.update(self._find_current_commit_details(git))
 
+                config['repo_name'] = self._find_repo_name(git)
+
                 # changed files
                 config['changed_files'] = self._find_changed_files(git)
             except Exception as e:
@@ -271,6 +273,32 @@ class Repository(object):
             return commit_details
         except Exception as e:
             print 'ERROR TRYING TO GET COMMIT DETAILS'
+            print e.message
+
+            return commit_details
+
+    def _find_repo_name(self, git):
+        """
+        Find the name of the remote repo for the etc directory
+
+        Example output from Git Command:
+            origin  git@code.corp.surveymonkey.com:config/billweb.git (fetch)
+            origin  git@code.corp.surveymonkey.com:config/billweb.git (push)
+
+        Returns just 'billweb', the name of the remote repo
+        """
+        try:
+            cmd = ['git', 'remote', '-v']
+            text = git.execute(cmd)
+            line = text.split("\n")[0]
+            match = re.search(r'\/(\w+)\.git', line, re.I)
+
+            if match:
+                return match.groups()[0]
+            else:
+                return ''
+        except Exception as e:
+            print 'ERROR FINDING REPO NAME'
             print e.message
 
             return commit_details
