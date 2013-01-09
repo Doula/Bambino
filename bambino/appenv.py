@@ -260,8 +260,7 @@ class Repository(object):
                 "message": ""
             }
 
-            cmd = ['git', 'log', '-1', '--pretty=%B']
-            commit_details["message"] = git.execute(cmd)
+            commit_details["message"] = self._find_git_message(git)
 
             cmd = ['git', 'show', '--name-status']
             last_commit_text = git.execute(cmd)
@@ -284,6 +283,16 @@ class Repository(object):
             print e.message
 
             return commit_details
+
+    def _find_git_message(self, git):
+        try:
+            cmd = ['git', 'log', '--oneline', '-1']
+            text = git.execute(cmd)
+            text_list = text.split(' ')
+            msg = text_list[1:len(text_list)]
+            return ' '.join(msg)
+        except:
+            return ''
 
     def _find_repo_name(self, git):
         """
