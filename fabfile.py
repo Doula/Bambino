@@ -46,9 +46,12 @@ def create_env():
 
 
 def get_hosts():
-    response = requests.get(doula_address)
-    response = json.loads(response.text)
-    print response
+    # response = requests.get(doula_address)
+    # response = json.loads(response.text)
+    # print response
+    response = {
+        'ip_addresses': ['192.168.4.61', '192.168.4.58', '192.168.4.74', '192.168.4.41']
+    }
     return response['ip_addresses']
 
 if(len(env.hosts) == 0):
