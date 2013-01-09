@@ -300,12 +300,15 @@ class Repository(object):
             if match:
                 return match.groups()[0]
             else:
-                return ''
+                # path will be something like /opt/webapp/anweb/etc
+                self.path.split('/')[-2]
+                # Go with the simple name
+                return self.name
         except Exception as e:
             print 'ERROR FINDING REPO NAME'
             print e.message
 
-            return commit_details
+            return self.name
 
     def _find_changed_files(self, git):
         """
