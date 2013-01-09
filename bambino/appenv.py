@@ -176,6 +176,10 @@ class Repository(object):
 
     @property
     def current_branch(self):
+        if (self.path.endswith('/etc')):
+            Node._site(Node._hostname())
+        else:
+            return self.repo.head.reference.name
         return self.repo.head.reference.name
 
     @property
