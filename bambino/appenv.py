@@ -301,14 +301,12 @@ class Repository(object):
                 return match.groups()[0]
             else:
                 # path will be something like /opt/webapp/anweb/etc
-                self.path.split('/')[-2]
-                # Go with the simple name
-                return self.name
+                return self.path.split('/')[-2]
         except Exception as e:
             print 'ERROR FINDING REPO NAME'
             print e.message
 
-            return self.name
+            return 'unknown_repo_name'
 
     def _find_changed_files(self, git):
         """
