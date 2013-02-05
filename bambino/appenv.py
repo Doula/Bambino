@@ -490,10 +490,14 @@ class Service(Repo):
 
     @property
     def changed_files(self):
-        changed_files = self.repo_app.changed_files
-        changed_files.extend(self.repo_config.changed_files)
+        try:
+            changed_files = self.repo_app.changed_files
+            changed_files.extend(self.repo_config.changed_files)
 
-        return self._unique_files(changed_files)
+            return self._unique_files(changed_files)
+        except:
+            # Ignore errors for changed files.
+            return []
 
     def _unique_files(self, changed_files):
         seen = set()
