@@ -88,16 +88,11 @@ class Node(object):
 
     @staticmethod
     def _ip():
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("192.168.201.5", 80))
-        out = (s.getsockname()[0])
-        s.close()
-        return out
+        return socket.gethostbyname(Node._hostname())
 
     @staticmethod
     def _hostname():
-        from socket import gethostname
-        return gethostname()
+        return socket.gethostname()
 
     @staticmethod
     def _site(hostname):
