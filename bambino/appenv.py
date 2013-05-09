@@ -5,12 +5,15 @@ from git import Repo
 from path import path as pathd
 from util import comparable_name
 import json
+import logging
 import os
 import pkg_resources
 import re
 import socket
 import sys
 import traceback
+
+log = logging.getLogger(__name__)
 
 
 class Node(object):
@@ -28,6 +31,7 @@ class Node(object):
         # Old code
         # for directory, language in {self.web_app_dir: 'python',  self.java_dir: 'java'}.iteritems():
         for directory, language in {self.web_app_dir: 'python'}.iteritems():
+            log.info("Looking for repo data: %s, %s", directory, language)
             r, e = self.repo_data_by_language(directory, language)
             repos = repos + r
             errors = errors + e
@@ -47,8 +51,13 @@ class Node(object):
                 repos.append(repo.to_dict)
             except Exception, e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                errors.append({'path': str(subdir), 'exception': "text: %s, traceback: %s" %
-                    (str(e), str(traceback.extract_tb(exc_traceback)))})
+                tb = traceback.extract_tb(exc_traceback)
+                errors.append({'path': str(subdir),
+                               'exception': "text: %s, traceback: %s" %
+                                (str(e), str(tb))})
+
+                log.error("repo data by language: caught exception: %s", e)
+                log.error("repo data by language: traceback: %s", tb)
 
         return (repos, errors)
 
@@ -59,9 +68,8 @@ class Node(object):
         for folder in self.web_app_dir.services:
             if(folder.split('/')[-1] in apps_to_tag):
                 try:
+                    log.info('tag:%s, message:%s', tag, message)
                     app = Service(folder)
-                    # todo, use logging for this message
-                    print 'tag:%s, message:%s' % (tag, message)
                     app.tag(tag, message)
                     tagged_apps.append(app.name)
                 except Exception, e:
