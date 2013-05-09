@@ -33,8 +33,8 @@ class Node(object):
         for directory, language in {self.web_app_dir: 'python'}.iteritems():
             log.info("Looking for repo data: %s, %s", directory, language)
             r, e = self.repo_data_by_language(directory, language)
-            repos = repos + r
-            errors = errors + e
+            repos.extend(r)
+            errors.extend(e)
 
         return {'services': repos, 'errors': errors}
 
