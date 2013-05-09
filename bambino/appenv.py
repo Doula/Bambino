@@ -43,6 +43,7 @@ class Node(object):
         errors = []
 
         for subdir in directory.services:
+            log.info("Repo data by language: looking in subdir: %s", subdir)
             try:
                 if language == 'python':
                     repo = Service(subdir)
