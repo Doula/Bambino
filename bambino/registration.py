@@ -6,8 +6,8 @@ from sys import exit
 from signal import signal, SIGTERM, SIGINT, SIGHUP
 from apscheduler.scheduler import Scheduler
 
-log = logging.getLogger('bambino')
-log.setLevel(logging.ERROR)
+log = logging.getLogger(__name__)
+
 node = {}
 registration_url = ''
 
