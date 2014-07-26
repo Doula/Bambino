@@ -4,7 +4,6 @@ from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
-CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
     'APScheduler',
@@ -13,13 +12,14 @@ requires = [
     'waitress',
     'path.py',
     'gitpython',
-    'requests'
+    'requests',
+    'fabric'
     ]
 
 setup(name='Bambino',
       version='0.0',
       description='Bambino',
-      long_description=README + '\n\n' +  CHANGES,
+      long_description=README,
       classifiers=[
         "Programming Language :: Python",
         "Framework :: Pylons",
@@ -35,6 +35,9 @@ setup(name='Bambino',
       zip_safe=False,
       install_requires=requires,
       tests_require=requires,
+      setup_requires=[
+        'egggitinfo'
+      ],
       test_suite="bambino",
       entry_points = """\
       [paste.app_factory]

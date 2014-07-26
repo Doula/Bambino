@@ -1,15 +1,12 @@
+from bambino.appenv import *
+from contextlib import contextmanager
+from path import path
 import os
-import glob
 import shutil
 import subprocess
 import tempfile
 import unittest
 
-from bambino.appenv import *
-from bambino.appenv import Repository
-from contextlib import contextmanager
-from pprint import pprint as pp
-from path import path
 
 class TestAppEnvIdentification(unittest.TestCase):
 
@@ -28,9 +25,10 @@ class TestAppEnvIdentification(unittest.TestCase):
 
     def test_envid(self):
         aef = self.makeone()
-        assert aef.applications
-        envs = set(x.name for x in aef.applications)
+        assert aef.services
+        envs = set(x.name for x in aef.services)
         assert envs == set(('ae1', 'ae2')), envs
+
 
 class TestAppEnvRepo(unittest.TestCase):
     temp_dir = os.getcwd() + '/temp'
@@ -46,11 +44,40 @@ class TestAppEnvRepo(unittest.TestCase):
         if os.path.isdir(TestAppEnvRepo.temp_dir):
             shutil.rmtree(TestAppEnvRepo.temp_dir, True)
 
+    def test_config_billweb(self):
+        """
+        Test the Repository.config property. This test WILL NOT
+        be a true unit test because it requires a Git repository
+        """
+        git_path = '/opt/webapp/billweb/etc'
+        repository = Repository(git_path)
+        config = repository.config
+
+        self.assertTrue(config["author"])
+        self.assertTrue(config["date"])
+        self.assertTrue(config["commit"])
+        self.assertTrue(config["latest_commit"])
+        self.assertTrue(config["changed_files"])
+
+    def test_config_anweb(self):
+        """
+        Test the Repository.config property. This test WILL NOT
+        be a true unit test because it requires a Git repository
+        """
+        git_path = '/opt/webapp/anweb/etc'
+        repository = Repository(git_path)
+        config = repository.config
+
+        self.assertTrue(config["author"])
+        self.assertTrue(config["date"])
+        self.assertTrue(config["commit"])
+        self.assertTrue(config["latest_commit"])
+        self.assertTrue(config["changed_files"])
 
     def make_env_app(self, args=[]):
         sb = self.sandbox = path(tempfile.mkdtemp())
         with pushd(sb):
-            predefined=['git init', 'touch root.txt', 'git add .',
+            predefined = ['git init', 'touch root.txt', 'git add .',
                         'git commit -a -m "commit to root"',
                         'mkdir etc', 'cd etc',
                         'git init', 'touch etc.txt', 'git add .',
@@ -65,8 +92,8 @@ class TestAppEnvRepo(unittest.TestCase):
             for arg in args:
                 subprocess.check_output(arg + devnul, shell=True)
 
-            from bambino.appenv import Application
-            return Application(sb)
+            from bambino.appenv import Service
+            return Service(sb)
 
     def test_no_tag(self):
         repo = self.make_env_app()
@@ -95,29 +122,25 @@ class TestAppEnvRepo(unittest.TestCase):
         repo = self.make_env_app(args)
         assert repo.status == 'uncommitted_changes'
 
+    def test__get_latest_commit_sha1_from_log(self):
+        git_path = '/opt/webapp/billweb/etc'
+        repository = Repository(git_path)
+        log_text = """commit 0fab9fbd022c71d4883dc153c2730f771b534c0a
+            Author: Doug Morgan <doug@surveymonkey.com>
+            Date:   Tue Nov 13 11:30:22 2012 -0800
+
+                Update app.ini
+
+                Testing changing path"""
+        sha1 = repository._get_latest_commit_sha1_from_log(log_text)
+        self.assertEqual(sha1, '0fab9fbd022c71d4883dc153c2730f771b534c0a')
+
     def test_committed_changes(self):
         args = ['echo "hi" >> root.txt',
                 'git tag first_tag',
                 'git commit -a -m "im just saying"']
         repo = self.make_env_app(args)
         assert repo.status == 'change_to_app_and_config'
-
-    def test_add_note(self):
-        """
-        Test adding a note to an app environment.
-        """
-        msg = "Add this message to Bambino"
-        app = Application(TestAppEnvRepo.temp_dir)
-        app.add_note(msg)
-        
-        files = glob.glob(TestAppEnvRepo.temp_dir + '/data/*_note.txt')
-        
-        self.assertTrue(len(files) > 0)
-    def test_mark_tag_as_deployed(self):
-        app = Application(TestAppEnvRepo.temp_dir)
-        app.mark_tag_as_deployed('test_tag')
-
-        self.assertTrue(app.is_tag_deployed('test_tag'))
 
 
 @contextmanager
