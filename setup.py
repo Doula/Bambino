@@ -11,7 +11,7 @@ requires = [
     'pyramid_debugtoolbar',
     'waitress',
     'path.py',
-    'gitpython',
+    'gitpython>=0.3.2.RC1',
     'requests',
     'fabric'
     ]
