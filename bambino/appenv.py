@@ -97,6 +97,7 @@ class Node(object):
 
     @staticmethod
     def _site(hostname):
+        log.info("bambino.appenv.Node._site: hostname = %r", hostname)
         sites = {'mktest3-py': 'mt3', 'mktest2-py': 'mt2'}
         if(hostname in sites):
             return sites[hostname]
@@ -109,11 +110,13 @@ class Node(object):
 
     @staticmethod
     def get_machine_info():
-        return {
+        ret = {
             'ip': Node._ip(),
             'name': Node._hostname(),
             'site': Node._site(Node._hostname())
         }
+        log.info("bambino.appenv.Node.get_machine_info: ret = %r", ret)
+        return ret
 
 
 class WebAppDir(pathd):
