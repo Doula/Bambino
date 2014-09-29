@@ -34,6 +34,10 @@ def register_this_bambino():
     """
     try:
         payload = {'node': json.dumps(node), 'action': 'register'}
+        log.info(
+            "bambino.registration.register_this_bambino: "
+            "Posting to %s with payload: %r",
+            registration_url, payload)
         requests.post(registration_url, data=payload)
     except requests.exceptions.ConnectionError as e:
         log.error(e.message)
