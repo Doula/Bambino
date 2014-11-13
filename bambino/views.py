@@ -1,10 +1,11 @@
+import logging
+
 from pyramid.view import view_config
 from pyramid.events import ApplicationCreated
 from pyramid.events import subscriber
-from appenv import Node
 
-import registration
-import logging
+from . import registration
+from .appenv import Node
 
 log = logging.getLogger(__name__)
 
@@ -22,9 +23,10 @@ def tag(request):
     web_apps_dir = request.registry.settings['web_apps_dir']
     node = Node(web_apps_dir)
     apps = [s.strip() for s in request.POST['apps'].split(',')]
-    return node.tag_apps(apps,
-                  request.POST['tag'],
-                  request.POST['description'])
+    return node.tag_apps(
+        apps,
+        request.POST['tag'],
+        request.POST['description'])
 
 
 @view_config(route_name='mark_as_deployed', renderer='json')
@@ -44,6 +46,10 @@ def register_me(event):
     settings = event.app.registry.settings
 
     machine_info = Node.get_machine_info()
-    machine_info['url'] = 'http://%s:%s' % (machine_info['ip'], settings['port'])
+    machine_info['url'] = 'http://%s:%s' % (
+        machine_info['ip'], settings['port'])
 
-    registration.register_bambino(machine_info, settings['register_url'], settings['registration_interval'])
+    registration.register_bambino(
+        machine_info,
+        settings['register_url'],
+        settings['registration_interval'])
