@@ -29,7 +29,8 @@ class Node(object):
         errors = []
 
         # Old code
-        # for directory, language in {self.web_app_dir: 'python',  self.java_dir: 'java'}.iteritems():
+        # for directory, language in {
+        #     self.web_app_dir: 'python',self.java_dir: 'java'}.iteritems():
         for directory, language in {self.web_app_dir: 'python'}.iteritems():
             log.info("Looking for repo data: %s, %s", directory, language)
             r, e = self.repo_data_by_language(directory, language)
@@ -55,7 +56,7 @@ class Node(object):
                 tb = traceback.extract_tb(exc_traceback)
                 errors.append({'path': str(subdir),
                                'exception': "text: %s, traceback: %s" %
-                                (str(e), str(tb))})
+                               (str(e), str(tb))})
 
                 log.error("repo data by language: caught exception: %s", e)
                 log.error("repo data by language: traceback: %s", tb)
@@ -77,8 +78,8 @@ class Node(object):
                     exc_type, exc_value, exc_traceback = sys.exc_info()
                     errors.append({
                         'path': str(folder),
-                        'exception': "text: %s, traceback: %s" %
-                            (str(e), str(traceback.extract_tb(exc_traceback)))
+                        'exception': "text: %s, traceback: %s" % (
+                            str(e), str(traceback.extract_tb(exc_traceback)))
                         })
 
         return {'tagged_apps': tagged_apps, 'errors': errors}
@@ -276,9 +277,11 @@ class Repository(object):
                 if line.lower().startswith("commit"):
                     commit_details["sha"] = line.split(" ")[1]
 
-                    cmd = ['git', 'show', '--format="%ci"', commit_details["sha"]]
+                    cmd = ['git', 'show', '--format="%ci"',
+                           commit_details["sha"]]
                     date_text = git.execute(cmd)
-                    commit_details["date"] = date_text.split("\n")[0].replace('"', '')
+                    commit_details["date"] = date_text.split("\n")[0]
+                    commit_details = commit_details.replace('"', '')
 
                 if line.lower().startswith("author"):
                     commit_details["author"] = line.split(" ")[1]
@@ -431,7 +434,9 @@ class Service(Repo):
             return 'uncommitted_changes'
 
         if (self.repo_app.change_count + self.repo_config.change_count > 0):
-            if (self.repo_app.change_count > 0 and self.repo_config.change_count > 0):
+            both_changed = (self.repo_app.change_count > 0 and
+                            self.repo_config.change_count > 0)
+            if both_changed:
                 return 'change_to_app_and_config'
             if (self.repo_app):
                 return 'change_to_app'
@@ -442,20 +447,23 @@ class Service(Repo):
 
     @property
     def to_dict(self):
-        out = dict(self.repo_app.to_dict('app').items() + self.repo_config.to_dict('config').items())
+        out = dict(self.repo_app.to_dict('app').items() +
+                   self.repo_config.to_dict('config').items())
         out['status'] = self.status
         out['name'] = self.name
         out['remote'] = self.remote
         out['packages'] = self.packages
         out['changed_files'] = self.changed_files
         out['last_tag_message'] = self.repo_app.last_tag_message
-        out['supervisor_service_names'] = self.supervisor_service_names(self.name)
+        out['supervisor_service_names'] = \
+            self.supervisor_service_names(self.name)
         return out
 
     def supervisor_service_names(self, name):
         """
         Returns the service names found in the supevisor conf file.
-        The supervisor.conf file is assumed to be in the /etc/supervisor/conf.d dir
+        The supervisor.conf file is assumed to be in the /etc/supervisor/conf.d
+        dir
         """
         conf_path = '/etc/supervisor/conf.d'
         conf_files = os.listdir(conf_path)
@@ -466,7 +474,9 @@ class Service(Repo):
             comparable_file_name = comparable_name(conf_file)
             # Compare without the dot in the name, makes it
             # possible to compare oddly named values
-            if comparable_file_name == name or comparable_file_name == name + 'conf':
+            match = (comparable_file_name == name or
+                     comparable_file_name == name + '.conf')
+            if match:
                 with file(conf_path + '/' + conf_file) as f:
                     for line in f.readlines():
                         match = re.match(r'\[program:([\w\d]+)\]', line, re.I)

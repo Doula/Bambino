@@ -1,4 +1,4 @@
-from bambino.appenv import *
+from bambino.appenv import Repository, WebAppDir
 from contextlib import contextmanager
 from path import path
 import os
@@ -77,12 +77,13 @@ class TestAppEnvRepo(unittest.TestCase):
     def make_env_app(self, args=[]):
         sb = self.sandbox = path(tempfile.mkdtemp())
         with pushd(sb):
-            predefined = ['git init', 'touch root.txt', 'git add .',
-                        'git commit -a -m "commit to root"',
-                        'mkdir etc', 'cd etc',
-                        'git init', 'touch etc.txt', 'git add .',
-                        'git commit -a -m "commit to etc"',
-                        'cd ..']
+            predefined = [
+                'git init', 'touch root.txt', 'git add .',
+                'git commit -a -m "commit to root"',
+                'mkdir etc', 'cd etc',
+                'git init', 'touch etc.txt', 'git add .',
+                'git commit -a -m "commit to etc"',
+                'cd ..']
 
             devnul = '| > /dev/null 2>&1'
 
@@ -101,17 +102,18 @@ class TestAppEnvRepo(unittest.TestCase):
 
     def test_dirty(self):
         repo = self.make_env_app(['echo "hi" >> root.txt'])
-        assert repo.app.is_dirty == True, repo
+        assert repo.app.is_dirty, repo
 
     def test_change_count(self):
-        args = ['echo "hi" >> root.txt', 'git tag first_tag', 'git commit -a -m "im just saying"']
+        args = ['echo "hi" >> root.txt', 'git tag first_tag',
+                'git commit -a -m "im just saying"']
         repo = self.make_env_app(args)
-        assert repo.app.change_count == 1, details
+        assert repo.app.change_count == 1
 
     def test_current_branch(self):
         args = ['git checkout -b my_branch']
         repo = self.make_env_app(args)
-        assert repo.app.current_branch == 'my_branch', details
+        assert repo.app.current_branch == 'my_branch'
 
     def test_unchanged(self):
         repo = self.make_env_app()

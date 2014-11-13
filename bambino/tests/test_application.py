@@ -1,4 +1,4 @@
-from bambino.appenv import *
+from bambino.appenv import Service
 import os
 import unittest
 
