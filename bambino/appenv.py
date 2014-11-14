@@ -275,13 +275,11 @@ class Repository(object):
 
             for line in lines:
                 if line.lower().startswith("commit"):
-                    commit_details["sha"] = line.split(" ")[1]
-
-                    cmd = ['git', 'show', '--format="%ci"',
-                           commit_details["sha"]]
-                    date_text = git.execute(cmd)
-                    commit_details["date"] = date_text.split("\n")[0]
-                    commit_details = commit_details.replace('"', '')
+                    sha = commit_details["sha"] = line.split(" ")[1]
+                    cmd = ['git', 'show', '--format="%ci"', sha]
+                    git_show_rv = git.execute(cmd)
+                    date_text = git_show_rv.split("\n")[0].replace('"', '')
+                    commit_details["date"] = date_text
 
                 if line.lower().startswith("author"):
                     commit_details["author"] = line.split(" ")[1]
