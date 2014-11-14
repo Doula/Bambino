@@ -98,7 +98,7 @@ class Node(object):
 
     @staticmethod
     def _site(hostname):
-        log.info("bambino.appenv.Node._site: hostname = %r", hostname)
+        log.debug("bambino.appenv.Node._site: hostname = %r", hostname)
         sites = {'mktest3-py': 'mt3', 'mktest2-py': 'mt2'}
         if(hostname in sites):
             return sites[hostname]
