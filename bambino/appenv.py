@@ -16,7 +16,16 @@ import traceback
 log = logging.getLogger(__name__)
 
 
+def get_site_from_hostname(hostname):
+    arr = hostname.split('-')
+    if len(arr) == 2:
+        return arr[0]
+
+    return hostname
+
+
 class Node(object):
+    site = get_site_from_hostname(socket.gethostname())
 
     def __init__(self, root):
         self.root = root
@@ -97,24 +106,11 @@ class Node(object):
         return socket.gethostname()
 
     @staticmethod
-    def _site(hostname):
-        log.debug("bambino.appenv.Node._site: hostname = %r", hostname)
-        sites = {'mktest3-py': 'mt3', 'mktest2-py': 'mt2'}
-        if(hostname in sites):
-            return sites[hostname]
-
-        arr = hostname.split('-')
-        if(len(arr) == 2):
-            return arr[0]
-
-        return hostname
-
-    @staticmethod
     def get_machine_info():
         ret = {
             'ip': Node._ip(),
             'name': Node._hostname(),
-            'site': Node._site(Node._hostname())
+            'site': Node.site,
         }
         log.info("bambino.appenv.Node.get_machine_info: ret = %r", ret)
         return ret
@@ -185,7 +181,7 @@ class Repository(object):
     @property
     def current_branch(self):
         if (self.path.endswith('/etc')):
-            return Node._site(Node._hostname())
+            return Node.site
         else:
             return self.repo.head.reference.name
 
